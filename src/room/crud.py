@@ -100,8 +100,8 @@ async def remove_user_from_room(session: AsyncSession, username: str, room_name:
 async def set_room_activity(session: AsyncSession, room_name: str, activity_bool: bool):
     try:
         await session.execute(update(room).where(room.c.room_name == room_name).values(is_active=activity_bool))
-        await session.commit()
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).one()
+        await session.commit()
         return room_instance
     except Exception as e:
         logger.error(f"Error setting room activity: {e}")
@@ -130,8 +130,8 @@ async def get_rooms(session: AsyncSession, current_user: UserRead, page: int = 1
                     is_favorites=row[5] if row[5] is not None else False
                 )
             )
-        await session.commit()
         rooms.sort(key=lambda x: x.is_favorites, reverse=True)
+        await session.commit()
         return rooms
     except Exception as e:
         logger.error(f"Error getting rooms: {e}")
