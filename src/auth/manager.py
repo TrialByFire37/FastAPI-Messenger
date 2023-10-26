@@ -1,16 +1,16 @@
-import re
 from typing import Optional, Union
 
-from auth.config import SECRET_AUTH
-from auth.models import User
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin, InvalidPasswordException, schemas, exceptions
 
+from auth.config import SECRET_AUTH
+from auth.models import User
 from auth.schemas import UserCreate
 from auth.utils import get_user_db
 
 
-async def validate_login(login: str, ) -> None:
+#  todo: проверки паролей и логинов, подумать насчет того чтобы можно было авторизироваться по логину, а не по e-mail.
+async def validate_login(login: str) -> None:
     if len(login) < 6:
         raise InvalidPasswordException(reason="Login should be at least 6 characters")
     if len(login) > 40:
@@ -23,11 +23,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET_AUTH
     verification_token_secret = SECRET_AUTH
 
-    async def create(self,
-                     user_create: schemas.UC,
-                     safe: bool = True,
-                     request: Optional[Request] = None,
-                     ) -> User:
+    async def create(self, user_create: schemas.UC, safe: bool = True, request: Optional[Request] = None) -> User:
 
         await validate_login(user_create.username)
 

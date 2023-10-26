@@ -6,7 +6,7 @@ from auth.config import SECRET_AUTH
 from auth.manager import get_user_manager
 from auth.models import User
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+bearer_transport = BearerTransport(tokenUrl="api/auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:

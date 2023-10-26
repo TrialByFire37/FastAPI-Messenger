@@ -5,10 +5,13 @@ import magic
 from fastapi import HTTPException, Response, UploadFile, status
 
 from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE
+from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
 
 
-async def upload(file: Optional[UploadFile] = None):
+#  todo: реализовать сложную логику для каждого типа файлов.
+#  мне кажается тебе стоит использовать switch-case, для всего всего.
+async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     if not file:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -33,7 +36,7 @@ async def upload(file: Optional[UploadFile] = None):
 
     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_IMAGE[file_type]}'
     await s3_upload(contents=contents, key=file_name)
-    return {'file_name': file_name}
+    return FileRead(file_name=file_name)
 
 
 async def get_url(file_name: Optional[str] = None):
@@ -47,7 +50,7 @@ async def get_url(file_name: Optional[str] = None):
     return contents
 
 
-async def download(file_name: Optional[str] = None):
+async def download(file_name: Optional[str] = None) -> Response:
     if not file_name:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

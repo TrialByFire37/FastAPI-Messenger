@@ -42,7 +42,7 @@ async def get_all_rooms(page: int = 1, limit: int = 10,
     return rooms
 
 
-@router.get("/room/{room_name}")
+@router.get("/room/{room_name}", dependencies=[Depends(fastapi_users.current_user())])
 async def get_single_room(room_name: str, session: AsyncSession = Depends(get_async_session)):
     """
     Get Room by room name

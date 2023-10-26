@@ -9,7 +9,7 @@ router = APIRouter(
 )
 
 
-@router.post("/user/profile_picture")
+@router.post("/profile_picture")
 async def upload_profile_picture(
         file: Optional[UploadFile] = None,
         session: AsyncSession = Depends(get_async_session),
@@ -21,7 +21,7 @@ async def upload_profile_picture(
     return await update_user(session, current_user, file)
 
 
-@router.get("/user/profile_picture")
+@router.get("/profile_picture")
 async def get_url_profile_picture(current_user: UserRead = Depends(fastapi_users.current_user())) -> Optional[str]:
     """
     Get the url of the current user's profile image

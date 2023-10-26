@@ -5,7 +5,7 @@ from fastapi import WebSocket, APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketState
 
-from chat.notifier import ConnectionManager
+from message.notifier import ConnectionManager
 from database import get_async_session
 from room.crud import add_user_to_room, remove_user_from_room, get_room, upload_message_to_room
 
@@ -42,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket, room_name: str, user_name: st
                     break
                 else:
                     await upload_message_to_room(session, data)
-                    logger.info(f"DATA RECIEVED: {data}")
+                    logger.info(f"DATA RECEIVED: {data}")
                     await manager.broadcast(f"{data}")
             else:
                 logger.warning(f"Websocket state: {websocket.application_state}, reconnecting...")

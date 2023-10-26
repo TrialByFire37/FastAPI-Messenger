@@ -50,7 +50,7 @@ async def update_user(session: AsyncSession, current_user: UserRead, file: Optio
     UserBaseReadRequest]:
     try:
         file_to_name = await upload(file)
-        image_url = await get_url(file_to_name['file_name'])
+        image_url = await get_url(file_to_name.file_name)
         await session.execute(
             update(user)
             .where(user.c.id == current_user.id)
