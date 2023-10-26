@@ -10,7 +10,7 @@ from aws.utils import s3_download, s3_upload, s3_URL
 
 
 #  todo: реализовать сложную логику для каждого типа файлов.
-#  мне кажается тебе стоит использовать switch-case, для всего всего.
+#  мне кажется тебе стоит использовать switch-case, для всего всего.
 async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     if not file:
         raise HTTPException(

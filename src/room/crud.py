@@ -4,7 +4,6 @@ from typing import Optional, List
 from sqlalchemy import select, insert, delete, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.schemas import UserRead
 from message.crud import get_messages_in_room
 from models.models import *
 from room.schemas import RoomReadRequest, RoomBaseInfoForUserRequest, FavoriteRequest
@@ -14,18 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 async def upload_message_to_room(session: AsyncSession, data):
-    message_data = data
     try:
-        room_name = message_data["room_name"]
-        username = message_data["user"]["username"]
+        room_name = data["room_name"]
+        username = data["user"]["username"]
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
         user_instance = (await session.execute(select(user).filter_by(username=username))).scalar_one()
-        message_data["user_id"] = user_instance.id
-        message_data["room_id"] = room_instance.room_id
-        del message_data["room_name"]
-        del message_data["user"]
+        data["user_id"] = user_instance.id
+        data["room_id"] = room_instance.room_id
+        del data["room_name"]
+        del data["user"]
         await session.execute(
-            insert(message).values(message_data=message_data["content"], user=user_instance, room=room_instance))
+            insert(message).values(message_data=data["content"], user=user_instance, room=room_instance))
         await session.commit()
         return True
     except Exception as e:
@@ -109,12 +107,12 @@ async def set_room_activity(session: AsyncSession, room_name: str, activity_bool
         return None
 
 
-async def get_rooms(session: AsyncSession, current_user: UserRead, page: int = 1, limit: int = 10) -> Optional[
+async def get_rooms(session: AsyncSession, current_user_id: int, page: int = 1, limit: int = 10) -> Optional[
     List[RoomBaseInfoForUserRequest]]:
     try:
         query = await session.execute(
             select(room, room_user)
-            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user.id),
+            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id),
                   isouter=True)
             .order_by(room_user.c.is_chosen.desc())
             .limit(limit)
@@ -138,12 +136,12 @@ async def get_rooms(session: AsyncSession, current_user: UserRead, page: int = 1
         return None
 
 
-async def get_user_favorite(session: AsyncSession, current_user: UserRead, page: int = 1, limit: int = 10) -> Optional[
+async def get_user_favorite(session: AsyncSession, current_user_id: int, page: int = 1, limit: int = 10) -> Optional[
     List[RoomBaseInfoForUserRequest]]:
     try:
         query = await (session.execute(
             select(room, room_user)
-            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user.id,
+            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id,
                                   room_user.c.is_chosen == True))
             .order_by(room_user.c.creation_date.desc())
             .limit(limit)
@@ -166,11 +164,11 @@ async def get_user_favorite(session: AsyncSession, current_user: UserRead, page:
         return None
 
 
-async def alter_favorite(session: AsyncSession, current_user: UserRead, request: FavoriteRequest) -> None:
+async def alter_favorite(session: AsyncSession, current_user_id: int, request: FavoriteRequest) -> None:
     try:
         await (session.execute(
             update(room_user)
-            .where(and_(room_user.c.user == current_user.id, room_user.c.room == request.room_id))
+            .where(and_(room_user.c.user == current_user_id, room_user.c.room == request.room_id))
             .values(is_chosen=request.is_chosen)
             ))
         await session.commit()

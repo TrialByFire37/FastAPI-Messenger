@@ -42,12 +42,9 @@ async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserRea
     return users
 
 
-async def get_user_image_url(current_user: UserRead) -> Optional[str]:
-    return current_user.image_url
-
-
-async def update_user(session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]) -> Optional[
-    UserBaseReadRequest]:
+async def update_user(
+        session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]
+) -> Optional[UserBaseReadRequest]:
     try:
         file_to_name = await upload(file)
         image_url = await get_url(file_to_name.file_name)

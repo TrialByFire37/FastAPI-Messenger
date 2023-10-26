@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from auth.base_config import fastapi_users
+from auth.schemas import UserRead
 from database import get_async_session
 from room.crud import *
 from room.schemas import RoomCreateRequest, FavoriteRequest
@@ -38,7 +39,7 @@ async def get_all_rooms(page: int = 1, limit: int = 10,
     """
     Get all rooms
     """
-    rooms = await get_rooms(session, current_user, page, limit)
+    rooms = await get_rooms(session, current_user.id, page, limit)
     return rooms
 
 
@@ -57,7 +58,7 @@ async def get_favorite_rooms(session: AsyncSession = Depends(get_async_session),
     """
     Get all favorite Room objects from a user
     """
-    rooms = await get_user_favorite(session, current_user)
+    rooms = await get_user_favorite(session, current_user.id)
     return rooms
 
 
@@ -69,5 +70,5 @@ async def alter_favorite_room(request: FavoriteRequest,
     Add or remove a favorite room from a user
     the request.type should be either "add" or "remove"
     """
-    row = await alter_favorite(session, current_user, request)
+    row = await alter_favorite(session, current_user.id, request)
     return row
