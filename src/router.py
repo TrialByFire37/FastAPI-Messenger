@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-import message.router as chat_router
+
 import room.router as room_router
 import user.router as user_router
 from auth.base_config import auth_backend, fastapi_users
@@ -31,7 +31,3 @@ router.include_router(user_router.router, prefix="/user", tags=["users"])
 
 # rooms
 router.include_router(room_router.router, tags=["rooms"])
-
-# chat
-# include WEBSOCKET
-router.include_router(chat_router.router, tags=["chat"])
