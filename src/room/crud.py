@@ -12,25 +12,6 @@ from user.crud import get_users_in_room
 logger = logging.getLogger(__name__)
 
 
-async def upload_message_to_room(session: AsyncSession, data):
-    try:
-        room_name = data["room_name"]
-        username = data["user"]["username"]
-        room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
-        user_instance = (await session.execute(select(user).filter_by(username=username))).scalar_one()
-        data["user_id"] = user_instance.id
-        data["room_id"] = room_instance.room_id
-        del data["room_name"]
-        del data["user"]
-        await session.execute(
-            insert(message).values(message_data=data["content"], user=user_instance, room=room_instance))
-        await session.commit()
-        return True
-    except Exception as e:
-        logger.error(f"Error adding message to DB: {type(e)} {e}")
-        await session.rollback()
-        return False
-
 
 async def insert_room(session: AsyncSession, username: str, room_name: str) -> RoomReadRequest:
     try:

@@ -3,10 +3,13 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UserBaseReadRequest(BaseModel):
-    user_id: int
+class UserBase(BaseModel):
     username: str
     image_url: Optional[str]
+
+
+class UserBaseReadRequest(UserBase):
+    user_id: int
 
 
 class UserReadRequest(UserBaseReadRequest):
