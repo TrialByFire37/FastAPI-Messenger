@@ -87,7 +87,7 @@ async def set_room_activity(session: AsyncSession, room_name: str, activity_bool
         await session.rollback()
         return None
 
-
+# todo: переписать что-то не так тут
 async def get_rooms(session: AsyncSession, current_user_id: int, page: int = 1, limit: int = 10) -> Optional[
     List[RoomBaseInfoForUserRequest]]:
     try:

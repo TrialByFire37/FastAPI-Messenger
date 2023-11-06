@@ -64,7 +64,6 @@ async def get_favorite_rooms(session: AsyncSession = Depends(get_async_session),
 
 
 @router.post("/favorite")
-@limiter.limit("10/minute")
 async def alter_favorite_room(request: FavoriteRequest,
                               session: AsyncSession = Depends(get_async_session),
                               current_user: UserRead = Depends(fastapi_users.current_user())):

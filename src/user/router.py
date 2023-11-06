@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 
 from auth.base_config import fastapi_users
 from database import get_async_session
-from ratelimiter import limiter
 from user.crud import *
 
 router = APIRouter()
