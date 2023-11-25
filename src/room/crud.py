@@ -87,15 +87,23 @@ async def set_room_activity(session: AsyncSession, room_name: str, activity_bool
         await session.rollback()
         return None
 
-# todo: переписать что-то не так тут
 async def get_rooms(session: AsyncSession, current_user_id: int, page: int = 1, limit: int = 10) -> Optional[
     List[RoomBaseInfoForUserRequest]]:
     try:
         query = await session.execute(
-            select(room, room_user)
-            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id),
-                  isouter=True)
-            .order_by(room_user.c.is_chosen.desc())
+            select(
+                room.c.room_id,
+                room.c.room_name,
+                room_user.c.is_chosen,
+                room_user.c.creation_date
+            )
+            .distinct(room_user.c.room)
+            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id))
+            .order_by(
+                room_user.c.room,
+                room_user.c.creation_date.desc(),
+                room_user.c.is_chosen.desc()
+            )
             .limit(limit)
             .offset((page - 1) * limit)
         )
@@ -106,7 +114,7 @@ async def get_rooms(session: AsyncSession, current_user_id: int, page: int = 1, 
                 RoomBaseInfoForUserRequest(
                     room_id=row[0],
                     room_name=row[1],
-                    is_favorites=row[5] if row[5] is not None else False
+                    is_favorites=row[2] if row[2] is not None else False
                 )
             )
         rooms.sort(key=lambda x: x.is_favorites, reverse=True)
