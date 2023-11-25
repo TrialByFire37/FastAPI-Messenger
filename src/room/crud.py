@@ -12,7 +12,6 @@ from user.crud import get_users_in_room
 logger = logging.getLogger(__name__)
 
 
-
 async def insert_room(session: AsyncSession, username: str, room_name: str) -> RoomReadRequest:
     try:
         await session.execute(insert(room).values(room_name=room_name))
@@ -155,9 +154,10 @@ async def get_user_favorite(session: AsyncSession, current_user_id: int, page: i
 
 async def alter_favorite(session: AsyncSession, current_user_id: int, request: FavoriteRequest) -> None:
     try:
+        user_instance = (await session.execute(select(room).filter_by(room_name=request.room_name))).scalar_one()
         await (session.execute(
             update(room_user)
-            .where(and_(room_user.c.user == current_user_id, room_user.c.room == request.room_id))
+            .where(and_(room_user.c.user == current_user_id, room_user.c.room == user_instance))
             .values(is_chosen=request.is_chosen)
             ))
         await session.commit()

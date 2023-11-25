@@ -28,5 +28,5 @@ class RoomReadRequest(RoomBaseInfoRequest):
 
 
 class FavoriteRequest(BaseModel):
-    room_id: int
+    room_name: str
     is_chosen: bool
