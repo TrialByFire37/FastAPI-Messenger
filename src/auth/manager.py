@@ -9,7 +9,7 @@ from auth.schemas import UserCreate
 from auth.utils import get_user_db
 
 
-#  todo: проверки паролей и логинов, подумать насчет того чтобы можно было авторизироваться по логину, а не по e-mail.
+#  todo: проверки паролей и логинов, подумать насчет того чтобы можно было авторизоваться по логину, а не по e-mail.
 async def validate_login(login: str) -> None:
     if len(login) < 6:
         raise InvalidPasswordException(reason="Login should be at least 6 characters")

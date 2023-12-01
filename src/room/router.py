@@ -69,7 +69,7 @@ async def alter_favorite_room(request: FavoriteRequest,
                               current_user: UserRead = Depends(fastapi_users.current_user())):
     """
     Add or remove a favorite room from a user
-    the request.type should be either "add" or "remove"
+    the request.is_chosen should be either "true" or "false"
     """
     row = await alter_favorite(session, current_user.id, request)
     return row

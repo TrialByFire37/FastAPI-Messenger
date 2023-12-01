@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Index, ForeignKeyConstraint, Boolean
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Index, ForeignKeyConstraint, Boolean, \
+    UniqueConstraint
 
 metadata = MetaData()
 
@@ -32,13 +33,15 @@ room_user = Table(
     "room_user",
     metadata,
     Column("creation_date", DateTime, default=datetime.utcnow, nullable=False),
+    Column("update_date", DateTime, default=datetime.utcnow, nullable=True),
     Column("is_chosen", Boolean, default=False, nullable=False),
     Column("user", Integer, nullable=False),
     Column("room", Integer, nullable=False),
     Index("idx_chosen__room", "room"),
     Index("idx_chosen__user", "user"),
-    ForeignKeyConstraint(["room"], [room.c.room_id], ondelete="CASCADE"),
-    ForeignKeyConstraint(["user"], [user.c.id], ondelete="CASCADE")
+    ForeignKeyConstraint(["room"], ["room.room_id"], ondelete="CASCADE"),
+    ForeignKeyConstraint(["user"], ["user.id"], ondelete="CASCADE"),
+    UniqueConstraint('user', 'room', name='uq_user_room')
 )
 
 message = Table(
