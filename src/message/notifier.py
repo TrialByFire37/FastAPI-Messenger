@@ -29,3 +29,4 @@ class ConnectionManager:
         logger.debug(f"Broadcasting across {len(self.active_connections)} CONNECTIONS")
         for connection in self.active_connections:
             await connection.send_json({"messages": chat_history_dict})
+            logger.debug(f"Broadcasting: {chat_history_dict}")

@@ -30,6 +30,7 @@ async def get_chat_history(session: AsyncSession, room_name: str) -> List[Messag
     messages = await get_messages_in_room(session, room_id)
     return messages
 
+
 async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[MessageRead]:
     result = await session.execute(
         select(message)

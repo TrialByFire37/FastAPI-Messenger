@@ -23,6 +23,16 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> UserReadRequest
     )
 
 
+async def get_user_by_username(session: AsyncSession, username: str) -> UserReadRequest:
+    user_instance = (await session.execute(select(user).filter_by(username=username))).one()
+    await session.commit()
+    return UserReadRequest(
+        user_id=user_instance.id,
+        username=user_instance.username,
+        email=user_instance.email,
+        profile_pic_img_src=user_instance.image_url
+    )
+
 async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserReadRequest]:
     result = await session.execute(
         select(user)

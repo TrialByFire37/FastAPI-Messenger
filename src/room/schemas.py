@@ -23,8 +23,7 @@ class RoomBaseInfoForUserRequest(RoomBaseInfoRequest):
 
 
 class RoomReadRequest(RoomBaseInfoRequest):
-    members: List[UserReadRequest] = Field(...)
-    messages: Optional[List[MessageRead]] = Field(...)
+    pass
 
 
 class FavoriteRequest(BaseModel):
