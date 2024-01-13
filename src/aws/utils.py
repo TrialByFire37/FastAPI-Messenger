@@ -8,7 +8,7 @@ from aws.config import AWS_BUCKET
 
 
 async def s3_upload(contents: bytes, key: str) -> None:
-    logging.info(f'Uploading {key} to s3')
+    logging.info(f'Uploading {key} to s3...')
     client.put_object(Key=key, Body=contents, Bucket=AWS_BUCKET)
 
 
@@ -22,7 +22,7 @@ async def s3_URL(key: str) -> Optional[str]:
 
 
 async def s3_download(key: str) -> bytes:
-    logging.info(f'Downloading {key} from s3')
+    logging.info(f'Downloading {key} from s3...')
     try:
         response = client.get_object(Bucket=AWS_BUCKET, Key=key)
         return response['Body'].read()

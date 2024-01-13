@@ -12,7 +12,7 @@ SUPPORTED_FILE_TYPES_FORM_IMAGE = {
 # videos types
 SUPPORTED_FILE_TYPES_FORM_VIDEO = {
     'video/mp4': 'mp4',
-    'video/x-matroska': 'mkv',
+    'video/webm': 'webm',
     'video/x-msvideo': 'avi',
     'video/quicktime': 'mov',
 }

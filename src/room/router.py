@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from auth.base_config import fastapi_users
 from auth.schemas import UserRead
@@ -12,18 +12,22 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/room")
-async def create_room(request: RoomCreateRequest,
+@limiter.limit("5/minute")
+async def create_room(request: Request,
+                      createrequest: RoomCreateRequest,
                       current_user: UserRead = Depends(fastapi_users.current_user()),
                       session: AsyncSession = Depends(get_async_session)):
     """
     Create a room
     """
-    res = await insert_room(session, current_user.username, request.room_name)
+    res = await insert_room(session, current_user.username, createrequest.room_name)
     return res
 
 
 @router.put("/room/{room_name}")
-async def add_user_to_room_members(room_name: str,
+@limiter.limit("5/minute")
+async def add_user_to_room_members(request: Request,
+                                   room_name: str,
                                    current_user: UserRead = Depends(fastapi_users.current_user()),
                                    session: AsyncSession = Depends(get_async_session)):
     """
@@ -64,12 +68,14 @@ async def get_favorite_rooms(session: AsyncSession = Depends(get_async_session),
 
 
 @router.post("/favorite")
-async def alter_favorite_room(request: FavoriteRequest,
+@limiter.limit("5/minute")
+async def alter_favorite_room(request: Request,
+                              favrequest: FavoriteRequest,
                               session: AsyncSession = Depends(get_async_session),
                               current_user: UserRead = Depends(fastapi_users.current_user())):
     """
     Add or remove a favorite room from a user
     the request.is_chosen should be either "true" or "false"
     """
-    row = await alter_favorite(session, current_user.id, request)
+    row = await alter_favorite(session, current_user.id, favrequest)
     return row
