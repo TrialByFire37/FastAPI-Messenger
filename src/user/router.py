@@ -3,8 +3,21 @@ from fastapi import APIRouter, Depends
 from auth.base_config import fastapi_users
 from database import get_async_session
 from user.crud import *
+from user.schemas import UserUpdateRequest
 
 router = APIRouter()
+
+
+@router.put("/update/me")
+async def update_me(
+        request: UserUpdateRequest,
+        session: AsyncSession = Depends(get_async_session),
+        current_user: UserRead = Depends(fastapi_users.current_user()),
+) -> None:
+    """
+    Update the current user
+    """
+    return await update_user_username_and_password(session, current_user, request)
 
 
 @router.post("/profile_picture")

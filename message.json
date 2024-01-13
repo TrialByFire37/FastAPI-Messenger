@@ -1,0 +1,197 @@
+{
+  "content": "gelo has entered the chat",
+  "user": {
+    "username": "gelo"
+  },
+  "room_name": "1234",
+  "type": "entrance",
+  "new_room_obj": {
+    "_id": "65a0f30ac394609690ed7c7f",
+    "room_name": "1234",
+    "members": [
+      {
+        "_id": "65a101070968515a1b5fe497",
+        "username": "oleg",
+        "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+        "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+        "profile_pic_img_src": null,
+        "favorites": [],
+        "disabled": false,
+        "date_created": "2024-01-12 09:06:15.476000"
+      },
+      {
+        "_id": "65a0f274688c1c24f311b872",
+        "username": "gelo",
+        "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+        "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+        "profile_pic_img_src": null,
+        "favorites": [
+          "1234"
+        ],
+        "disabled": false,
+        "date_created": "2024-01-12 08:04:04.658000"
+      }
+    ],
+    "messages": [
+      {
+        "content": "123",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      },
+      {
+        "content": "456",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "45",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      },
+      {
+        "content": "hello",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "hello",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "gg?",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      },
+      {
+        "content": "mb",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "xx",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "bb",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      },
+      {
+        "content": "hey!",
+        "user": {
+          "_id": "65a101070968515a1b5fe497",
+          "username": "oleg",
+          "hashed_password": "$2b$12$A9oiMcIkyGrx3NsXduZfzO/4x5eEnBhUg14U211ixrwbAuWtryVqq",
+          "salt": "$2b$12$39Skb1VqzEf5KnO8MJx6GO",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 09:06:15.476000"
+        }
+      },
+      {
+        "content": "?",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      },
+      {
+        "content": "bbb",
+        "user": {
+          "_id": "65a0f274688c1c24f311b872",
+          "username": "gelo",
+          "hashed_password": "$2b$12$SXMSYhkIt/8DvLe16jLun..xfgtxbXKLKlSVkBlYVR1Z5174xTyy.",
+          "salt": "$2b$12$j.UfLQSWFJffK040MLgNou",
+          "profile_pic_img_src": null,
+          "favorites": [],
+          "disabled": false,
+          "date_created": "2024-01-12 08:04:04.658000"
+        }
+      }
+    ],
+    "last_pinged": "2024-01-12 08:06:34.345000",
+    "active": true,
+    "date_created": "2024-01-12 08:06:34.345000"
+  }
+}

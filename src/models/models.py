@@ -21,7 +21,6 @@ user = Table(
     Column("username", String(40), unique=True, nullable=False),
     Column("email", String, unique=True, nullable=False),
     Column("hashed_password", String, nullable=False),
-    # Column("salt", String, nullable=False),
     Column("image_url", String, nullable=True),
     Column("creation_date", DateTime, default=datetime.utcnow, nullable=False),
     Column("is_active", Boolean, default=True, nullable=False),

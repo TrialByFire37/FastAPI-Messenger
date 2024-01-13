@@ -18,3 +18,8 @@ class UserReadRequest(UserBaseReadRequest):
 
 class UserImageUploadRequest(BaseModel):
     image_url: str
+
+
+class UserUpdateRequest(BaseModel):
+    password: str = None
+    username: str = None

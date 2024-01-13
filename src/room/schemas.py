@@ -1,6 +1,7 @@
-from typing import Optional, List
+import datetime
+from typing import List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from message.schemas import MessageRead
 from user.schemas import UserReadRequest
@@ -23,7 +24,10 @@ class RoomBaseInfoForUserRequest(RoomBaseInfoRequest):
 
 
 class RoomReadRequest(RoomBaseInfoRequest):
-    pass
+    members: List[UserReadRequest]
+    messages: List[MessageRead]
+    room_active: bool
+    room_creation_date: datetime.datetime
 
 
 class FavoriteRequest(BaseModel):

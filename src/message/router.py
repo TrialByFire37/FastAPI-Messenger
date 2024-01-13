@@ -1,12 +1,12 @@
+import json
 import logging
 
 from fastapi import WebSocket, APIRouter, Depends
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketState
 
 from database import get_async_session
-from message.crud import get_chat_history, upload_message_to_room
+from message.crud import upload_message_to_room
 from message.notifier import ConnectionManager
 from room.crud import remove_user_from_room, get_room, add_user_to_room
 from user.crud import get_user_by_username
@@ -29,28 +29,40 @@ async def websocket_endpoint(
         await manager.connect(session, websocket, room_name)
         await add_user_to_room(session, user_name, room_name)
         room = await get_room(session, room_name)
-        sender = await get_user_by_username(session, user_name)
-
-        # Send chat history to the connected user
-        chat_history = await get_chat_history(session, room_name)
-        chat_history_dict = [jsonable_encoder(message) for message in chat_history]
+        print(room.members)
         data = {
-            "content": f"{sender.username} has entered the chat",
-            "media_file_url": None,
-            "sender": {
-                "username": sender.username,
-                "image_url": sender.image_url,
-                "user_id": sender.user_id,
-                "email": sender.email
+            "content": f"{user_name} has entered the chat",
+            "user": {"username": user_name},
+            "room_name": room_name,
+            "type": "entrance",
+            "new_room_obj": {
+                "room_id": room.room_id,
+                "room_name": room_name,
+                "members": room.members,
+                "messages": room.messages,
+                "active": room.room_active,
+                "date_created": room.room_creation_date
             },
         }
-        chat_history_dict.append(data)
-        await manager.broadcast(chat_history_dict)
-
-        while websocket.client_state != WebSocketState.DISCONNECTED:
-            message = await websocket.receive_text()
-            await handle_message(session, room_name, user_name, message)
-
+        await manager.broadcast(f"{json.dumps(data, default=str)}")
+        # wait for messages
+        while True:
+            if websocket.application_state == WebSocketState.CONNECTED:
+                data = await websocket.receive_text()
+                print(data)
+                message_data = json.loads(data)
+                if "type" in message_data and message_data["type"] == "dismissal":
+                    logger.warning(message_data["content"])
+                    logger.info("Disconnecting from Websocket")
+                    await manager.disconnect(session, websocket, room_name)
+                    break
+                else:
+                    await upload_message_to_room(session, room_name, user_name, message_data["content"])
+                    logger.info(f"DATA RECIEVED: {data}")
+                    await manager.broadcast(f"{data}")
+            else:
+                logger.warning(f"Websocket state: {websocket.application_state}, reconnecting...")
+                await manager.connect(session, websocket, room_name)
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
@@ -58,14 +70,3 @@ async def websocket_endpoint(
         logger.warning("Disconnecting Websocket")
         await remove_user_from_room(session, user_name, room_name)
         await manager.disconnect(session, websocket, room_name)
-
-
-async def handle_message(session, room_name, user_name, message):
-    success = await upload_message_to_room(session, room_name, user_name, message)
-    if success:
-        # Retrieve the chat history for the room
-        chat_history = await get_chat_history(session, room_name)
-        chat_history_dict = [jsonable_encoder(message) for message in chat_history]
-
-        # Send the chat history to all connected users
-        await manager.broadcast(chat_history_dict)

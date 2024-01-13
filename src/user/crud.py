@@ -1,15 +1,17 @@
 import logging
 from typing import List
 
+from fastapi_users.password import PasswordHelper
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.schemas import UserRead
 from aws.service import *
 from models.models import *
-from user.schemas import UserReadRequest, UserBaseReadRequest
+from user.schemas import UserReadRequest, UserBaseReadRequest, UserUpdateRequest
 
 logger = logging.getLogger(__name__)
+
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> UserReadRequest:
@@ -65,6 +67,23 @@ async def update_user(
         await session.commit()
         return UserBaseReadRequest(user_id=current_user.id, username=current_user.username,
                                    image_url=current_user.image_url)
+    except Exception as e:
+        logger.error(f"Error updating user: {e}")
+        await session.rollback()
+        return None
+
+
+async def update_user_username_and_password(
+        session: AsyncSession, current_user: UserRead, request: UserUpdateRequest
+) -> None:
+    try:
+        await session.execute(
+            update(user)
+            .where(user.c.id == current_user.id)
+            .values(username=request.username,
+                    hashed_password=PasswordHelper().hash(request.password))
+        )
+        await session.commit()
     except Exception as e:
         logger.error(f"Error updating user: {e}")
         await session.rollback()

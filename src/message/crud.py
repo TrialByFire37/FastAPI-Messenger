@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from message.schemas import MessageRead
+from message.schemas import MessageRead, MemberRead
 from models.models import *
 from user.crud import get_user_by_id
 
@@ -24,13 +24,6 @@ async def upload_message_to_room(session: AsyncSession, room_name: str, user_nam
         return False
 
 
-async def get_chat_history(session: AsyncSession, room_name: str) -> List[MessageRead]:
-    room_id = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
-    await session.commit()
-    messages = await get_messages_in_room(session, room_id)
-    return messages
-
-
 async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[MessageRead]:
     result = await session.execute(
         select(message)
@@ -44,7 +37,26 @@ async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[Mess
         messages.append(MessageRead(
             content=row[1],
             media_file_url=row[2],
-            sender=user_read_request,
+            user=user_read_request,
         ))
     await session.commit()
     return messages
+
+
+async def get_members_in_room(session: AsyncSession, room_id: int) -> List[MemberRead]:
+    result = await session.execute(
+        select(room_user)
+        .join(user, user.c.id == room_user.c.user)
+        .where(room.c.room_id == room_id)
+    )
+    rows = result.fetchall()
+    members: List[MemberRead] = list()
+    for row in rows:
+        members.append(MemberRead(
+            user_id=row[0],
+            username=row[6],
+            profile_pic_img_src=row[9],
+            date_created=row[10]
+        ))
+    await session.commit()
+    return members
