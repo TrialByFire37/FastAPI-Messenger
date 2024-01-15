@@ -8,7 +8,7 @@ from starlette.websockets import WebSocketState
 from database import get_async_session
 from message.crud import upload_message_to_room
 from message.notifier import ConnectionManager
-from room.crud import remove_user_from_room, get_room, add_user_to_room
+from room.crud import set_user_room_activity, get_room, add_user_to_room
 from user.crud import get_user_by_username
 
 logger = logging.getLogger(__name__)
@@ -27,9 +27,10 @@ async def websocket_endpoint(
     try:
         # Connect the user to the WebSocket
         await manager.connect(session, websocket, room_name)
-        await add_user_to_room(session, user_name, room_name)
+        is_new = await add_user_to_room(session, user_name, room_name)
+        if is_new is False:
+            await set_user_room_activity(session, user_name, room_name, True)
         room = await get_room(session, room_name)
-        print(room.members)
         data = {
             "content": f"{user_name} has entered the chat",
             "user": {"username": user_name},
@@ -49,7 +50,6 @@ async def websocket_endpoint(
         while True:
             if websocket.application_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_text()
-                print(data)
                 message_data = json.loads(data)
                 if "type" in message_data and message_data["type"] == "dismissal":
                     logger.warning(message_data["content"])
@@ -68,5 +68,5 @@ async def websocket_endpoint(
         message = template.format(type(ex).__name__, ex.args)
         logger.error(message)
         logger.warning("Disconnecting Websocket")
-        await remove_user_from_room(session, user_name, room_name)
+        await set_user_room_activity(session, user_name, room_name, False)
         await manager.disconnect(session, websocket, room_name)

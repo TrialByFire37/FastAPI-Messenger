@@ -55,24 +55,26 @@ async def add_user_to_room(session: AsyncSession, username: str, room_name: str)
             .where(and_(room_user.c.user == user_instance, room_user.c.room == room_instance))
         )).scalar_one_or_none()
         if entity_room_user is None:
-            association = room_user.insert().values(user=user_instance, room=room_instance)
+            association = room_user.insert().values(user=user_instance, room=room_instance, is_active=True)
             await session.execute(association)
             await session.commit()
-        return True
+            return True
+        else:
+            return False
     except Exception as e:
         logger.error(f"Error adding user to room: {e}")
         await session.rollback()
         return None
 
 
-async def remove_user_from_room(session: AsyncSession, username: str, room_name: str):
+async def set_user_room_activity(session: AsyncSession, username: str, room_name: str, is_active: bool):
     try:
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
         user_instance = (await session.execute(select(user).filter_by(username=username))).scalar_one()
         await session.execute(
-            delete(room_user).where(
+            update(room_user).where(
                 and_(room_user.c.user == user_instance, room_user.c.room == room_instance)
-            )
+            ).values(is_active=is_active)
         )
         await session.commit()
         return True
