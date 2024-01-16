@@ -1,22 +1,24 @@
 from typing import Optional, Union
+import re
 
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin, InvalidPasswordException, schemas, exceptions
 
 from auth.config import SECRET_AUTH
+from auth.exceptions import InvalidLoginException
 from auth.models import User
 from auth.schemas import UserCreate
 from auth.utils import get_user_db
 
 
-#  todo: проверки паролей и логинов, подумать насчет того чтобы можно было авторизоваться по логину, а не по e-mail.
-async def validate_login(login: str) -> None:
-    if len(login) < 6:
-        raise InvalidPasswordException(reason="Login should be at least 6 characters")
-    if len(login) > 40:
-        raise InvalidPasswordException(reason="Login should be at more 40 characters")
-    # if not login.isalpha():
-    #     raise InvalidPasswordException(reason="Login should contain only letters")
+async def validate_username(username: str) -> None:
+    regex = r"^(?=.*[A-Za-zА-Яа-я])(?=.*[0-9]).{4,20}$"
+    if not re.search(regex, username):
+        raise InvalidLoginException(
+            reason="Login must consist of upper/lowercase letters (cyrillic, latin) and digits.")
+    if not (4 <= len(username) <= 20):
+        raise InvalidLoginException(
+            reason="Login's length must be from 4 to 20 symbols.")
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
@@ -25,7 +27,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def create(self, user_create: schemas.UC, safe: bool = True, request: Optional[Request] = None) -> User:
 
-        await validate_login(user_create.username)
+        await validate_username(user_create.username)
 
         await self.validate_password(user_create.password, user_create)
 
@@ -48,14 +50,18 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         return created_user
 
     async def validate_password(self, password: str, user: Union[UserCreate, User]) -> None:
-        if len(password) < 6:
-            raise InvalidPasswordException(reason="Password should be at least 6 characters")
-        if len(password) > 40:
-            raise InvalidPasswordException(reason="Password should be at more 40 characters")
-        # regex = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{6,40}$"
-        # if not re.search(regex, password):
-        #     raise InvalidPasswordException(
-        #         reason="Password should contain at least one uppercase letter, one lowercase letter, and one digit")
+        if not (6 <= len(password) <= 40):
+            raise InvalidPasswordException(
+                reason="Password's length must be from 6 to 40 symbols.")
+        if not any(char.isalpha() for char in password):
+            raise InvalidPasswordException(
+                reason="Password must contain at least one letter.")
+        if not any(char.isdigit() for char in password):
+            raise InvalidPasswordException(
+                reason="Password must contain at least one digit.")
+        if not any(char.isalnum() or char in "!@#$%^&*()-_=+" for char in password):
+            raise InvalidPasswordException(
+                reason="Password must contain at least one special character.")
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
