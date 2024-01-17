@@ -48,6 +48,17 @@ async def get_all_rooms(page: int = 1, limit: int = 10,
     return rooms
 
 
+@router.get("/rooms/{room_name}")
+async def filter_out_rooms(room_name: str, page: int = 1, limit: int = 10,
+                        current_user: UserRead = Depends(fastapi_users.current_user()),
+                        session: AsyncSession = Depends(get_async_session)):
+    """
+    Filter all rooms
+    """
+    rooms = await filter_rooms(session, current_user.id, room_name, page, limit)
+    return rooms
+
+
 @router.get("/room/{room_name}", dependencies=[Depends(fastapi_users.current_user())])
 async def get_single_room(room_name: str, session: AsyncSession = Depends(get_async_session)):
     """
