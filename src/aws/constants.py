@@ -7,6 +7,7 @@ SUPPORTED_FILE_TYPES_FORM_IMAGE = {
     'image/jpg': 'jpg',
     'image/gif': 'gif',
     'image/jpeg': 'jpeg',
+    'image/webp': 'webp',
 }
 
 # videos types

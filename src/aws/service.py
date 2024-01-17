@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import Optional
 from uuid import uuid4
 
@@ -37,19 +38,27 @@ async def compress_video(video_name: str) -> bytes:
         )
 
 
-async def compress_image(image_name: str) -> bytes:
+async def compress_image(file_type: str, image_data: bytes) -> bytes:
     try:
-        img = Image.open(image_name)
+        img = Image.open(image_data)
         width, height = img.size
+        img_io = BytesIO()
 
         if width > 2048 or height > 1080:
             img.thumbnail((2048, 1080))
-        else:
+
+        img.save(img_io, f'{file_type.split("/")[1]}', quality='keep')
+        image_file_size = img_io.tell()
+
+        if file_type == "image/png":
+            img = img.convert("P", palette=Image.ADAPTIVE, colors=256)
+        if file_type == "image/jpg" or file_type == "image/jpeg":
             quality = 100
-            while len(img.tobytes()) > 1 * MB and quality >= 90:
+            while image_file_size > 1 * MB and quality >= 90:
                 quality -= 1
                 img = img.convert('RGB').quantize(colors=256, method=2).convert('RGB')
                 img = img.resize((int(width * 0.9), int(height * 0.9)), Image.ANTIALIAS)
+                img.save(img_io, f'{file_type.split("/")[1]}', quality=f'{quality}')
 
             if quality < 90:
                 raise HTTPException(
@@ -57,7 +66,7 @@ async def compress_image(image_name: str) -> bytes:
                     detail='Image quality could not be compressed within the acceptable range.'
                 )
 
-        img_bytes = img.tobytes()
+        img_bytes = img_io.getvalue()
         return img_bytes
     except Exception as e:
         raise HTTPException(
@@ -85,29 +94,37 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
                 detail=f'Audio file size exceeds the maximum allowed one of 8 MB. Try another one.'
             )
     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
-        if 8 * MB < size <= 50 * MB:
-            contents = await compress_video(video_path=contents)
-        elif size > 50 * MB:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'Video file size exceeds the maximum allowed one of 50 MB. Try another one.'
-            )
+        try:
+            if 8 * MB < size <= 50 * MB:
+                contents = await compress_video(video_name=BytesIO(contents))
+            elif size > 50 * MB:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f'Video file size exceeds the maximum allowed one of 50 MB. Try another one.'
+                )
+        except Exception as e:
+            print("Compression failed.")
+            pass
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
-        img = Image.open(contents)
-        width, height = img.size
+        try:
+            img = Image.open(BytesIO(contents))
+            width, height = img.size
 
-        if width <= 10 or height <= 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Image size is too small to be previewed. More than 10x10 is required.'
-            )
-        if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-            contents = await compress_image(image_path=contents)
-        if size > 10 * MB:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Image file size should not exceed 10 MB. '
-            )
+            if width <= 10 or height <= 10:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail='Image size is too small to be previewed. More than 10x10 is required.'
+                )
+            if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
+                contents = await compress_image(file_type, BytesIO(contents))
+            if size > 10 * MB:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail='Image file size should not exceed 10 MB. '
+                )
+        except Exception as e:
+            print("Compression failed.")
+            pass
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
