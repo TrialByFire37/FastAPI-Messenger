@@ -25,7 +25,6 @@ async def insert_room(session: AsyncSession, username: str, room_name: str) -> R
         logger.error(f"Error inserting room to DB: {e}")
         await session.rollback()
 
-
 async def delete_room(session: AsyncSession, room_name: str) -> None:
     try:
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).one()
@@ -37,6 +36,43 @@ async def delete_room(session: AsyncSession, room_name: str) -> None:
     except Exception as e:
         logger.error(f"Error deleting room: {e}")
         await session.rollback()
+        
+async def filter_rooms(session: AsyncSession, current_user_id: int, room_name: str, page: int = 1, limit: int = 10) \
+        -> Optional[List[RoomBaseInfoForUserRequest]]:
+    try:
+        query = await session.execute(
+            select(
+                room.c.room_id,
+                room.c.room_name,
+                room_user.c.is_chosen,
+                room_user.c.creation_date
+            )
+            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id),
+                  isouter=True)
+            .filter(room.c.room_name.ilike(f'%{room_name}%'))
+            .order_by(
+                room_user.c.update_date.desc(),
+                room_user.c.is_chosen.desc()
+            )
+            .limit(limit)
+            .offset((page - 1) * limit)
+        )
+        rooms: List[RoomBaseInfoForUserRequest] = list()
+        rows = query.fetchall()
+        for row in rows:
+            rooms.append(
+                RoomBaseInfoForUserRequest(
+                    room_id=row[0],
+                    room_name=row[1],
+                    is_favorites=row[2] if row[2] is not None else False
+                )
+            )
+        rooms.sort(key=lambda x: x.is_favorites, reverse=True)
+        await session.commit()
+        return rooms
+    except Exception as e:
+        logger.error(f"Error filtering rooms: {e}")
+        return None
 
 
 async def get_room(session: AsyncSession, room_name: str) -> Optional[RoomReadRequest]:

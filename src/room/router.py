@@ -49,9 +49,7 @@ async def get_all_rooms(page: int = 1, limit: int = 10,
 
 
 @router.get("/rooms/{room_name}")
-async def filter_out_rooms(room_name: str, page: int = 1, limit: int = 10,
-                           current_user: UserRead = Depends(fastapi_users.current_user()),
-                           session: AsyncSession = Depends(get_async_session)):
+async def filter_out_rooms(room_name: str, page: int = 1, limit: int = 10, current_user: UserRead = Depends(fastapi_users.current_user()), session: AsyncSession = Depends(get_async_session)):
     """
     Filter all rooms
     """

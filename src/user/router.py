@@ -30,3 +30,14 @@ async def upload_profile_picture(
     Upload a profile picture for the current user
     """
     return await update_user(session, current_user, file)
+
+@router.post("/file_test")
+async def upload_file(
+        file: Optional[UploadFile] = None,
+        session: AsyncSession = Depends(get_async_session),
+        current_user: UserRead = Depends(fastapi_users.current_user()),
+) -> Optional[UserBaseReadRequest]:
+    """
+    Upload a file to DB (FOR TESTING PURPOSES)
+    """
+    return await upload_test(session, current_user, file)
