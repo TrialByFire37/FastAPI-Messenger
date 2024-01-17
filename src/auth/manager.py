@@ -11,6 +11,7 @@ from auth.schemas import UserCreate
 from auth.utils import get_user_db
 
 
+
 async def validate_username(username: str) -> None:
     regex = r"^(?=.*[A-Za-zА-Яа-я])(?=.*[0-9]).{4,20}$"
     if not re.search(regex, username):
