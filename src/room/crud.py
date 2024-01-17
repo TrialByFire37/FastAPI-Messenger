@@ -18,12 +18,15 @@ async def insert_room(session: AsyncSession, username: str, room_name: str) -> R
         await session.execute(insert(room).values(room_name=room_name))
         user_instance = (await session.execute(select(user).filter_by(username=username))).scalar_one()
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
-        await session.execute(insert(room_user).values(user=user_instance, room=room_instance))
+
+        await session.execute(insert(room_user).values(user=user_instance, room=room_instance, is_owner=True))
         await session.commit()
+
         return await get_room(session, room_name)
     except Exception as e:
         logger.error(f"Error inserting room to DB: {e}")
         await session.rollback()
+
 
 
 async def filter_rooms(session: AsyncSession, current_user_id: int, room_name: str, page: int = 1, limit: int = 10) \
