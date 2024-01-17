@@ -35,6 +35,7 @@ room_user = Table(
     Column("update_date", DateTime, default=datetime.utcnow, nullable=True),
     Column("is_chosen", Boolean, default=False, nullable=False),
     Column("is_active", Boolean, default=False, nullable=False),
+    Column("is_owner", Boolean, default=False, nullable=False),
     Column("user", Integer, nullable=False),
     Column("room", Integer, nullable=False),
     Index("idx_chosen__room", "room"),

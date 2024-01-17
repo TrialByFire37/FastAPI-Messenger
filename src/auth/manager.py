@@ -11,9 +11,9 @@ from auth.utils import get_user_db
 
 #  todo: проверки паролей и логинов, подумать насчет того чтобы можно было авторизоваться по логину, а не по e-mail.
 async def validate_login(login: str) -> None:
-    if len(login) < 6:
+    if len(login) < 4:
         raise InvalidPasswordException(reason="Login should be at least 6 characters")
-    if len(login) > 40:
+    if len(login) > 20:
         raise InvalidPasswordException(reason="Login should be at more 40 characters")
     # if not login.isalpha():
     #     raise InvalidPasswordException(reason="Login should contain only letters")
