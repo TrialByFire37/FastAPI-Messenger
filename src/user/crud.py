@@ -88,3 +88,13 @@ async def update_user_username_and_password(
         logger.error(f"Error updating user: {e}")
         await session.rollback()
         return None
+
+async def upload_test(
+        session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]
+) -> Optional[UserBaseReadRequest]:
+    try:
+        file_to_name = await upload(file)
+        print("File uploaded")
+    except Exception as e:
+        logger.error(f"Error uploading: {e}")
+        return None
