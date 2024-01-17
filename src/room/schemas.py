@@ -23,6 +23,9 @@ class RoomBaseInfoForUserRequest(RoomBaseInfoRequest):
     is_favorites: bool
 
 
+class RoomBaseInfoForAllUserRequest(RoomBaseInfoForUserRequest):
+    is_owner: bool
+
 class RoomReadRequest(RoomBaseInfoRequest):
     members: List[UserReadRequest]
     messages: List[MessageRead]

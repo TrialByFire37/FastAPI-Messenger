@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from message.crud import get_messages_in_room
 from models.models import *
-from room.schemas import RoomReadRequest, RoomBaseInfoForUserRequest, FavoriteRequest
+from room.schemas import RoomReadRequest, RoomBaseInfoForUserRequest, FavoriteRequest, RoomBaseInfoForAllUserRequest
 from user.crud import get_users_in_room
 
 logger = logging.getLogger(__name__)
@@ -175,7 +175,7 @@ async def get_rooms(session: AsyncSession, current_user_id: int, page: int = 1, 
 
 
 async def get_user_favorite(session: AsyncSession, current_user_id: int, page: int = 1, limit: int = 10) \
-        -> Optional[List[RoomBaseInfoForUserRequest]]:
+        -> Optional[List[RoomBaseInfoForAllUserRequest]]:
     try:
         query = await (session.execute(
             select(room, room_user)
@@ -189,10 +189,11 @@ async def get_user_favorite(session: AsyncSession, current_user_id: int, page: i
         rows = query.fetchall()
         for row in rows:
             rooms.append(
-                RoomBaseInfoForUserRequest(
+                RoomBaseInfoForAllUserRequest(
                     room_id=row[0],
                     room_name=row[1],
-                    is_favorites=row[6] if row[6] is not None else False
+                    is_favorites=row[6] if row[6] is not None else False,
+                    is_owner=row[8] if row[8] is not None else False
                 )
             )
         await session.commit()
