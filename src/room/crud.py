@@ -36,7 +36,7 @@ async def delete_room(session: AsyncSession, room_name: str) -> None:
     except Exception as e:
         logger.error(f"Error deleting room: {e}")
         await session.rollback()
-        
+
 async def filter_rooms(session: AsyncSession, current_user_id: int, room_name: str, page: int = 1, limit: int = 10) \
         -> Optional[List[RoomBaseInfoForUserRequest]]:
     try:
@@ -228,6 +228,36 @@ async def get_user_favorite(session: AsyncSession, current_user_id: int, page: i
             select(room, room_user)
             .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id,
                                   room_user.c.is_chosen == True))
+            .order_by(room_user.c.update_date.desc())
+            .limit(limit)
+            .offset((page - 1) * limit)
+        ))
+        rooms = list()
+        rows = query.fetchall()
+        for row in rows:
+            rooms.append(
+                RoomBaseInfoForAllUserRequest(
+                    room_id=row[0],
+                    room_name=row[1],
+                    is_favorites=row[6] if row[6] is not None else False,
+                    is_owner=row[8] if row[8] is not None else False
+                )
+            )
+        await session.commit()
+        return rooms
+    except Exception as e:
+        logger.error(f"Error getting rooms: {e}")
+        return None
+
+
+async def get_user_favorite_like_room_name(session: AsyncSession, room_name: str, current_user_id: int, page: int = 1,
+                                           limit: int = 10) \
+        -> Optional[List[RoomBaseInfoForAllUserRequest]]:
+    try:
+        query = await (session.execute(
+            select(room, room_user)
+            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id,
+                                  room_user.c.is_chosen == True, room.c.room_name.ilike(f'%{room_name}%') ))
             .order_by(room_user.c.update_date.desc())
             .limit(limit)
             .offset((page - 1) * limit)

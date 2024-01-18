@@ -49,7 +49,9 @@ async def get_all_rooms(page: int = 1, limit: int = 10,
 
 
 @router.get("/rooms/{room_name}")
-async def filter_out_rooms(room_name: str, page: int = 1, limit: int = 10, current_user: UserRead = Depends(fastapi_users.current_user()), session: AsyncSession = Depends(get_async_session)):
+async def filter_out_rooms(room_name: str, page: int = 1, limit: int = 10,
+                           current_user: UserRead = Depends(fastapi_users.current_user()),
+                           session: AsyncSession = Depends(get_async_session)):
     """
     Filter all rooms
     """
@@ -66,9 +68,8 @@ async def get_single_room(room_name: str, session: AsyncSession = Depends(get_as
     return selected_room
 
 
-# todo: удалить команту.
 @router.delete("/room/{room_name}", dependencies=[Depends(fastapi_users.current_user())])
-async def delete_room_by_roomname(room_name: str, session: AsyncSession = Depends(get_async_session)):
+async def delete_room_by_room_name(room_name: str, session: AsyncSession = Depends(get_async_session)):
     """
     Delete Room by room name
     """
@@ -79,9 +80,20 @@ async def delete_room_by_roomname(room_name: str, session: AsyncSession = Depend
 async def get_favorite_rooms(page: int = 1, limit: int = 10, session: AsyncSession = Depends(get_async_session),
                              current_user: UserRead = Depends(fastapi_users.current_user())):
     """
-    Get all favorite Room objects from a user
+    Get favorites Room objects from a user
     """
     rooms = await get_user_favorite(session, current_user.id, page, limit)
+    return rooms
+
+
+@router.get("/favorite/{room_name}")
+async def get_favorite_rooms_by_room_name(room_name: str, page: int = 1, limit: int = 10,
+                                          session: AsyncSession = Depends(get_async_session),
+                                          current_user: UserRead = Depends(fastapi_users.current_user())):
+    """
+    Get favorites Room objects from a user
+    """
+    rooms = await get_user_favorite_like_room_name(session, room_name, current_user.id, page, limit)
     return rooms
 
 

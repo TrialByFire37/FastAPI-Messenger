@@ -61,19 +61,3 @@ async def websocket_endpoint(
         logger.warning("Disconnecting Websocket")
         await set_user_room_activity(session, user_name, room_name, False)
         await manager.disconnect(session, websocket, room_name)
-
-#         try:
-#             while True:
-#                 if websocket.application_state == WebSocketState.CONNECTED:
-#                     data = await websocket.receive_text()
-#                     message_data = json.loads(data)
-#                     await upload_message_to_room(session, room_name, user_name, message_data["content"])
-#                     logger.info(f"DATA RECIEVED: {data}")
-#                     await manager.broadcast(f"{data}")
-#                 else:
-#                     logger.warning(f"Websocket state: {websocket.application_state}, reconnecting...")
-#                     await manager.connect(session, websocket, room_name)
-#         except WebSocketDisconnect as e:
-#             logger.info("Disconnecting from Websocket")
-#             await set_user_room_activity(session, user_name, room_name, False)
-#             await manager.disconnect(session, websocket, room_name)
