@@ -16,6 +16,12 @@ class UserReadRequest(UserBaseReadRequest):
     email: str
 
 
+class UserPersonalReadRequest(UserBaseReadRequest):
+    last_name: str
+    first_name: str
+    surname: str
+
+
 class UserImageUploadRequest(BaseModel):
     image_url: str
 
