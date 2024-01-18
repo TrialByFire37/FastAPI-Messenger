@@ -107,13 +107,12 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
         try:
             if 8 * MB < size <= 50 * MB:
-                contents = await compress_video(contents)
+                file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_VIDEO[file_type]}'
             elif size > 50 * MB:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f'Video file size exceeds the maximum allowed one of 50 MB. Try another one.'
                 )
-            file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_VIDEO[file_type]}'
         except Exception as e:
             print("Compression failed.")
             pass

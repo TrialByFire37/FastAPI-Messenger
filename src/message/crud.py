@@ -1,9 +1,11 @@
 import logging
-from typing import List
+from typing import List, Optional
 
+from fastapi import UploadFile
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aws.service import upload
 from message.schemas import MessageRead, MemberRead
 from models.models import *
 from user.crud import get_user_by_id
@@ -16,6 +18,23 @@ async def upload_message_to_room(session: AsyncSession, room_name: str, user_nam
         room_id = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
         user_id = (await session.execute(select(user).filter_by(username=user_name))).scalar_one()
         await session.execute(insert(message).values(message_data=message_data, user=user_id, room=room_id))
+        await session.commit()
+        return True
+    except Exception as e:
+        logger.error(f"Error adding message to DB: {type(e)} {e}")
+        await session.rollback()
+        return False
+
+
+async def upload_message_with_file_to_room(session: AsyncSession, room_name: str, user_name: str,
+                                           file: Optional[UploadFile] = None):
+    try:
+        room_id = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
+        user_id = (await session.execute(select(user).filter_by(username=user_name))).scalar_one()
+        media_file_url = await upload(file)
+        await session.execute(insert(message).values(
+            media_file_url="https://f003.backblazeb2.com/file/gleb-bucket/" + media_file_url.file_name, user=user_id,
+            room=room_id))
         await session.commit()
         return True
     except Exception as e:
