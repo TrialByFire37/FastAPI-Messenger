@@ -16,6 +16,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     # salt: Mapped[str] = mapped_column(String, nullable=False)
     image_url: Mapped[Optional[str]] = mapped_column(String)
     creation_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    last_name: Mapped[str] = mapped_column(String(20))
+    first_name: Mapped[str] = mapped_column(String(20))
+    surname: Mapped[Optional[str]] = mapped_column(String(20))
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

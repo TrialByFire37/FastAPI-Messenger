@@ -54,7 +54,7 @@ async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserRea
     return users
 
 
-async def update_user(
+async def update_user_image(
         session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]
 ) -> Optional[UserBaseReadRequest]:
     try:
@@ -73,7 +73,7 @@ async def update_user(
         return None
 
 
-async def update_user_username_and_password(
+async def update_user_data(
         session: AsyncSession, current_user: UserRead, request: UserUpdateRequest
 ) -> None:
     try:
@@ -81,7 +81,10 @@ async def update_user_username_and_password(
             update(user)
             .where(user.c.id == current_user.id)
             .values(username=request.username,
-                    hashed_password=PasswordHelper().hash(request.password))
+                    hashed_password=PasswordHelper().hash(request.password),
+                    last_name=request.last_name,
+                    first_name=request.first_name,
+                    surname=request.surname)
         )
         await session.commit()
     except Exception as e:
