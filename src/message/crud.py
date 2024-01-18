@@ -5,7 +5,7 @@ from fastapi import UploadFile
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aws.service import upload
+from aws.service import upload, upload_from_base64
 from message.schemas import MessageRead, MemberRead
 from models.models import *
 from user.crud import get_user_by_id
@@ -26,15 +26,21 @@ async def upload_message_to_room(session: AsyncSession, room_name: str, user_nam
         return False
 
 
-async def upload_message_with_file_to_room(session: AsyncSession, room_name: str, user_name: str,
-                                           file: Optional[UploadFile] = None):
+async def upload_message_with_file_to_room(session: AsyncSession,
+                                           room_name: str,
+                                           user_name: str,
+                                           base64_data: str,
+                                           file_type: str):
     try:
         room_id = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
         user_id = (await session.execute(select(user).filter_by(username=user_name))).scalar_one()
-        media_file_url = await upload(file)
+        media_file_url = await upload_from_base64(base64_data, file_type)
         await session.execute(insert(message).values(
-            media_file_url="https://f003.backblazeb2.com/file/gleb-bucket/" + media_file_url.file_name, user=user_id,
-            room=room_id))
+            user=user_id,
+            room=room_id,
+            message_data=" ",
+            media_file_url="https://f003.backblazeb2.com/file/gleb-bucket/" + media_file_url.file_name,
+        ))
         await session.commit()
         return True
     except Exception as e:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from auth.base_config import fastapi_users
 from database import get_async_session
+from message.crud import upload_message_with_file_to_room
 from user.crud import *
 from user.schemas import UserUpdateRequest
 
@@ -31,8 +32,11 @@ async def upload_profile_picture(
     """
     return await update_user(session, current_user, file)
 
-@router.post("/file_test")
+
+@router.post("/upload_image")
 async def upload_file(
+        user_name: str,
+        room_name: str,
         file: Optional[UploadFile] = None,
         session: AsyncSession = Depends(get_async_session),
         current_user: UserRead = Depends(fastapi_users.current_user()),
@@ -40,4 +44,4 @@ async def upload_file(
     """
     Upload a file to DB (FOR TESTING PURPOSES)
     """
-    return await upload_test(session, current_user, file)
+    return await upload_message_with_file_to_room(session, room_name, user_name, file)

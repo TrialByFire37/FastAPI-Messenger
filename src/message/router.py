@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketState, WebSocketDisconnect
 
 from database import get_async_session
-from message.crud import upload_message_to_room
+from message.crud import upload_message_to_room, upload_message_with_file_to_room
 from message.notifier import ConnectionManager
 from room.crud import set_user_room_activity, get_room, add_user_to_room
 from user.crud import get_user_by_username
@@ -51,8 +51,12 @@ async def websocket_endpoint(
             if websocket.application_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
-                await upload_message_to_room(session, room_name, user_name, message_data["content"])
-                logger.info(f"DATA RECIEVED: {data}")
+                if "type" in message_data and message_data["type"] == "file":
+                    logger.warning(message_data)
+                    await upload_message_with_file_to_room(session, room_name, user_name, message_data["content"], message_data["fileType"])
+                else:
+                    logger.warning(message_data)
+                    await upload_message_to_room(session, room_name, user_name, message_data["content"])
                 await manager.broadcast(f"{data}")
     except WebSocketDisconnect as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
