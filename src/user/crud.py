@@ -48,7 +48,7 @@ async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserRea
             user_id=row[0],
             username=row[1],
             email=row[2],
-            profile_pic_img_src=row[4]
+            image_url=row[4]
         ))
     await session.commit()
     return users
