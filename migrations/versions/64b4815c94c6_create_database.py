@@ -1,8 +1,8 @@
-"""Database create
+"""Create database
 
-Revision ID: 9a39f1d60a84
+Revision ID: 64b4815c94c6
 Revises: 
-Create Date: 2023-10-11 15:08:14.090381
+Create Date: 2024-01-18 16:23:50.066237
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9a39f1d60a84'
+revision: str = '64b4815c94c6'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -57,11 +57,15 @@ def upgrade() -> None:
     op.create_index('idx_message__user', 'message', ['user'], unique=False)
     op.create_table('room_user',
     sa.Column('creation_date', sa.DateTime(), nullable=False),
+    sa.Column('update_date', sa.DateTime(), nullable=True),
     sa.Column('is_chosen', sa.Boolean(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('is_owner', sa.Boolean(), nullable=False),
     sa.Column('user', sa.Integer(), nullable=False),
     sa.Column('room', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['room'], ['room.room_id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user'], ['user.id'], ondelete='CASCADE')
+    sa.ForeignKeyConstraint(['user'], ['user.id'], ondelete='CASCADE'),
+    sa.UniqueConstraint('user', 'room', name='uq_user_room')
     )
     op.create_index('idx_chosen__room', 'room_user', ['room'], unique=False)
     op.create_index('idx_chosen__user', 'room_user', ['user'], unique=False)
