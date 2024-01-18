@@ -23,6 +23,9 @@ user = Table(
     Column("hashed_password", String, nullable=False),
     Column("image_url", String, nullable=True),
     Column("creation_date", DateTime, default=datetime.utcnow, nullable=False),
+    Column("last_name", String(20), nullable=True),
+    Column("first_name", String(20), nullable=True),
+    Column("surname", String(20), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_superuser", Boolean, default=False, nullable=False),
     Column("is_verified", Boolean, default=False, nullable=False)

@@ -18,7 +18,7 @@ async def update_me(
     """
     Update the current user
     """
-    return await update_user_username_and_password(session, current_user, request)
+    return await update_user_data(session, current_user, request)
 
 
 @router.post("/profile_picture")
@@ -30,7 +30,7 @@ async def upload_profile_picture(
     """
     Upload a profile picture for the current user
     """
-    return await update_user(session, current_user, file)
+    return await update_user_image(session, current_user, file)
 
 
 @router.post("/upload_image")
