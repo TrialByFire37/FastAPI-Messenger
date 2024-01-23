@@ -2,7 +2,7 @@ import logging
 from typing import Optional, List
 
 from sqlalchemy import select, insert, delete, and_, update
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from message.crud import get_messages_in_room
@@ -21,9 +21,15 @@ async def insert_room(session: AsyncSession, username: str, room_name: str) -> R
         await session.execute(insert(room_user).values(user=user_instance, room=room_instance, is_owner=True))
         await session.commit()
         return await get_room(session, room_name)
+    except IntegrityError as e:
+        logger.error(f"IntegrityError: {e}")
+        await session.rollback()
+        raise ValueError("Room name is already taken. Please choose a different name.")
     except Exception as e:
         logger.error(f"Error inserting room to DB: {e}")
         await session.rollback()
+        raise
+
 
 async def delete_room(session: AsyncSession, room_name: str) -> None:
     try:
@@ -36,6 +42,7 @@ async def delete_room(session: AsyncSession, room_name: str) -> None:
     except Exception as e:
         logger.error(f"Error deleting room: {e}")
         await session.rollback()
+
 
 async def filter_rooms(session: AsyncSession, current_user_id: int, room_name: str, page: int = 1, limit: int = 10) \
         -> Optional[List[RoomBaseInfoForUserRequest]]:

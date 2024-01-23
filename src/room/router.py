@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 
 from auth.base_config import fastapi_users
 from auth.schemas import UserRead
@@ -20,8 +20,11 @@ async def create_room(request: Request,
     """
     Create a room
     """
-    res = await insert_room(session, current_user.username, createrequest.room_name)
-    return res
+    try:
+        res = await insert_room(session, current_user.username, createrequest.room_name)
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
 
 
 @router.put("/room/{room_name}")
