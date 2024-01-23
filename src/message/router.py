@@ -51,12 +51,14 @@ async def websocket_endpoint(
             if websocket.application_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
+                content = message_data["content"]
                 if "type" in message_data and message_data["type"] == "file":
-                    logger.warning(message_data)
-                    await upload_message_with_file_to_room(session, room_name, user_name, message_data["content"], message_data["fileType"])
+                    file_type = message_data["fileType"]
+                    media_file_url = await upload_message_with_file_to_room(session, room_name, user_name, content,
+                                                                            file_type)
+                    data = {"content": " ", "media_file_url": media_file_url, "user": message_data["user"]}
                 else:
-                    logger.warning(message_data)
-                    await upload_message_to_room(session, room_name, user_name, message_data["content"])
+                    await upload_message_to_room(session, room_name, user_name, content)
                 await manager.broadcast(f"{data}")
     except WebSocketDisconnect as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"

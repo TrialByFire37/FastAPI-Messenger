@@ -30,23 +30,19 @@ async def upload_message_with_file_to_room(session: AsyncSession,
                                            room_name: str,
                                            user_name: str,
                                            base64_data: str,
-                                           file_type: str):
+                                           file_type: str) -> str:
     try:
         room_id = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
         user_id = (await session.execute(select(user).filter_by(username=user_name))).scalar_one()
         media_file_url = await upload_from_base64(base64_data, file_type)
-        await session.execute(insert(message).values(
-            user=user_id,
-            room=room_id,
-            message_data=" ",
-            media_file_url="https://f003.backblazeb2.com/file/gleb-bucket/" + media_file_url.file_name,
-        ))
+        media_file_url = "https://f003.backblazeb2.com/file/gleb-bucket/" + media_file_url.file_name
+        await session.execute(
+            insert(message).values(user=user_id, room=room_id, message_data=" ", media_file_url=media_file_url, ))
         await session.commit()
-        return True
+        return media_file_url
     except Exception as e:
         logger.error(f"Error adding message to DB: {type(e)} {e}")
         await session.rollback()
-        return False
 
 
 async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[MessageRead]:
