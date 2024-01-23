@@ -56,10 +56,16 @@ async def websocket_endpoint(
                     file_type = message_data["fileType"]
                     media_file_url = await upload_message_with_file_to_room(session, room_name, user_name, content,
                                                                             file_type)
-                    data = {"content": " ", "media_file_url": media_file_url, "user": message_data["user"]}
+                    file_data = {
+                        "content": " ",
+                        "media_file_url": media_file_url,
+                        "user": {"username": user_name},
+                        "type": "file",
+                    }
+                    await manager.broadcast(f"{json.dumps(file_data, default=str)}")
                 else:
                     await upload_message_to_room(session, room_name, user_name, content)
-                await manager.broadcast(f"{data}")
+                    await manager.broadcast(f"{data}")
     except WebSocketDisconnect as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
