@@ -28,6 +28,7 @@ async def get_current_user(session: AsyncSession, current_user: UserRead) -> Use
         surname=user_instance.surname
     )
 
+
 async def get_user_by_id(session: AsyncSession, user_id: int) -> UserReadRequest:
     user_instance = (await session.execute(select(user).filter_by(id=user_id))).one()
     await session.commit()
@@ -48,6 +49,7 @@ async def get_user_by_username(session: AsyncSession, username: str) -> UserRead
         email=user_instance.email,
         profile_pic_img_src=user_instance.image_url
     )
+
 
 async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserReadRequest]:
     result = await session.execute(
@@ -105,6 +107,7 @@ async def update_user_data(
         logger.error(f"Error updating user: {e}")
         await session.rollback()
         return None
+
 
 async def upload_test(
         session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]

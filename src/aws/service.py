@@ -1,18 +1,18 @@
-import magic
-
-import av
+import base64
 from io import BytesIO
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import HTTPException, Response, UploadFile, status
+import av
+import magic
 from PIL import Image
+from fastapi import HTTPException, Response, UploadFile, status
 
 from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE, SUPPORTED_FILE_TYPES_FORM_AUDIO, \
     SUPPORTED_FILE_TYPES_FORM_VIDEO, SUPPORTED_FILE_TYPES_FORM_APPLICATION
 from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
-import base64
+
 
 async def compress_video(video_data: bytes) -> bytes:
     try:
@@ -80,11 +80,11 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
 
     if file_type in SUPPORTED_FILE_TYPES_FORM_AUDIO:
         max_size = 8 * MB
-        error_message = f'Audio file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
+        error_message = f'Audio file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.'
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
         max_size = 50 * MB if file_type in ['video/mp4', 'video/webm'] else 8 * MB
-        error_message = f'Video file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
+        error_message = f'Video file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.'
         if size > max_size:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -125,7 +125,6 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
     return FileRead(file_name=file_name)
 
 
-
 async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     if not file:
         raise HTTPException(
@@ -138,7 +137,6 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
 
     file_type = magic.from_buffer(buffer=contents, mime=True)
     file_name = ''
-
 
     if file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         try:
@@ -170,7 +168,6 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
 
     await s3_upload(contents=contents, key=file_name)
     return FileRead(file_name=file_name)
-
 
 
 # async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileRead]:

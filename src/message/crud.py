@@ -1,11 +1,10 @@
 import logging
-from typing import List, Optional
+from typing import List
 
-from fastapi import UploadFile
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aws.service import upload, upload_from_base64
+from aws.service import upload_from_base64
 from message.schemas import MessageRead, MemberRead
 from models.models import *
 from user.crud import get_user_by_id

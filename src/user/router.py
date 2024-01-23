@@ -31,6 +31,7 @@ async def get_me(
     """
     return await get_current_user(session, current_user)
 
+
 @router.post("/profile_picture")
 async def upload_profile_picture(
         file: Optional[UploadFile] = None,

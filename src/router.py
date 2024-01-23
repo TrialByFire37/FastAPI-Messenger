@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-
 import room.router as room_router
 import user.router as user_router
 from auth.base_config import auth_backend, fastapi_users

@@ -9,7 +9,6 @@ from database import get_async_session
 from message.crud import upload_message_to_room, upload_message_with_file_to_room
 from message.notifier import ConnectionManager
 from room.crud import set_user_room_activity, get_room, add_user_to_room
-from user.crud import get_user_by_username
 
 logger = logging.getLogger(__name__)
 

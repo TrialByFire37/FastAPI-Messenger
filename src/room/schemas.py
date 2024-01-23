@@ -26,6 +26,7 @@ class RoomBaseInfoForUserRequest(RoomBaseInfoRequest):
 class RoomBaseInfoForAllUserRequest(RoomBaseInfoForUserRequest):
     is_owner: bool
 
+
 class RoomReadRequest(RoomBaseInfoRequest):
     members: List[UserReadRequest]
     messages: List[MessageRead]

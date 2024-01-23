@@ -1,7 +1,7 @@
 KB = 1024
 MB = 1024 * KB
 
-#all
+# all
 SUPPORTED_FILE_TYPES_FORM_APPLICATION = {
     'image/png': 'png',
     'image/jpg': 'jpg',
