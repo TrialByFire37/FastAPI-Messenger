@@ -149,7 +149,7 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
                     detail='Image size is too small to be previewed. More than 10x10 is required.'
                 )
             if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-                contents = await compress_image(file_type, BytesIO(contents))
+                contents = await compress_image(file_type, contents)
             if size > 10 * MB:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
