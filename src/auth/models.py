@@ -13,7 +13,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     username: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
-    # salt: Mapped[str] = mapped_column(String, nullable=False)
     image_url: Mapped[Optional[str]] = mapped_column(String)
     creation_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_name: Mapped[str] = mapped_column(String(20))
