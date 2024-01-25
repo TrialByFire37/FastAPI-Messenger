@@ -1,5 +1,5 @@
-from typing import Optional, Union
 import re
+from typing import Optional, Union
 
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin, InvalidPasswordException, schemas, exceptions
@@ -9,7 +9,6 @@ from auth.exceptions import InvalidLoginException
 from auth.models import User
 from auth.schemas import UserCreate
 from auth.utils import get_user_db
-
 
 
 async def validate_username(username: str) -> None:
