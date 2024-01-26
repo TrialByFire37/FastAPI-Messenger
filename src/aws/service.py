@@ -14,31 +14,98 @@ from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
 
 
-async def compress_video(video_data: bytes) -> bytes:
+# todo: FS_Media_2: прикрепляешь совсем мелкие картинки - появляются сперва как пустые
+# сообщение, и после перезагрузки страницы исчезают; 1080p не сжимается по соотношению до 720p; видео не сжимаются
+# по весу (отсюда и не загружаются)
+
+# todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
+async def compress_video(video_data: bytes, file_type: str, resize_flag: bool, size_flag: bool) -> bytes:
     try:
-        # Create a BytesIO object from the passed video_data
-        video_stream = BytesIO(video_data)
+        in_stream = BytesIO(video_data)
+        in_container = av.open(in_stream)
+        in_audio = in_container.streams.audio[0]
+        in_video = in_container.streams.video[0]
+        output_options = {}
+        acodec = ""
+        vcodec = ""
 
-        # Open video container
-        container = av.open(video_stream)
+        # Define format-specific options
+        if file_type == 'video/mp4' or file_type == 'video/mov':
+            output_options = {'c:v': 'libx264', 'crf': '0', 'vf': 'scale=1280:720'}
+            acodec = "aac"
+            vcodec = "h264"
+        elif file_type == 'video/webm':
+            output_options = {'c:v': 'libvpx-vp9', 'b:v': '2M', 'crf': '0', 'vf': 'scale=1280:720'}
+            acodec = "vorbis"
+            vcodec = "vp8"
+        elif file_type == 'video/avi':
+            output_options = {'c:v': 'msmpeg4', 'crf': '0', 'vf': 'scale=1280:720'}
+            acodec = "mp3"
+            vcodec = "mpeg4"
 
-        # Get video stream details
-        video_stream_info = container.streams.video[0]
-        width = video_stream_info.width
-        height = video_stream_info.height
+        out_stream = BytesIO()
 
-        if width >= 1920 or height >= 1080:
-            # Scale the video if needed
-            output_options = {'c:v': 'libx264', 'vf': 'scale=1280:720'}
-            output_stream = av.open('pipe:', format='mp4', mode='w')
-            for frame in container.decode(video=0):
-                output_stream.encode(frame)
-            output_stream.close()
-            compressed_video_data = output_stream.muxed
-        else:
-            compressed_video_data = video_data
+        if resize_flag:
+            out_container = av.open(out_stream, format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
+                                    mode='w', options=output_options)
+            #out_video = out_container.add_stream(vcodec)
+            #out_audio = out_container.add_stream(acodec)
+            out_audio = out_container.add_stream(template=in_audio)
+            out_video = out_container.add_stream(template=in_video)
 
-        return compressed_video_data
+            # for frame_video in in_container.decode(in_container.streams.video[0]):
+            #     packet = out_video.encode(frame_video)
+            #     out_container.mux(packet)
+            #
+            # for frame_audio in in_container.decode(in_container.streams.audio[0]):
+            #     packet = out_audio.encode(frame_audio)
+            #     out_container.mux(packet)
+            for packet in in_container.demux(in_video):
+                if packet.dts is None:
+                    continue
+
+                packet.stream = out_video
+                out_container.mux(packet)
+
+            for packet in in_container.demux(in_audio):
+                if packet.dts is None:
+                    continue
+
+                packet.stream = out_audio
+                out_container.mux(packet)
+
+            out_container.close()
+
+            compressed_size = len(out_stream.getvalue())
+
+            # Check if the file is smaller than 8 MB after resizing
+            if not size_flag and compressed_size <= 8 * MB:
+                return out_stream.getvalue()
+
+        # If size_flag is True or if resizing did not bring the file size below 8 MB
+        if size_flag:
+            output_options['crf'] = 18
+            # Compress video based on file size
+            while True:
+                out_container = av.open(out_stream, format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
+                                        mode='w', options=output_options)
+                out_video = out_container.add_stream(vcodec)
+                out_audio = out_container.add_stream(acodec)
+
+                for frame_video in in_container.decode(in_container.streams.video[0]):
+                    packet = out_video.encode(frame_video)
+                    out_container.mux(packet)
+
+                for frame_audio in in_container.decode(in_container.streams.audio[0]):
+                    packet = out_audio.encode(frame_audio)
+                    out_container.mux(packet)
+
+                out_container.close()
+
+                compressed_size = len(out_stream.getvalue())
+
+                if 8 * MB <= compressed_size:
+                    return out_stream.getvalue()
 
     except Exception as e:
         raise HTTPException(
@@ -53,8 +120,8 @@ async def compress_image(file_type: str, image_data: bytes) -> bytes:
         width, height = img.size
         img_io = BytesIO()
 
-        if width > 2048 or height > 1080:
-            img = img.resize((2048, 1080))
+        if width >= 2048 or height >= 1080:
+            img.thumbnail((2048, 1080))
 
         img.save(img_io, format=SUPPORTED_FILE_TYPES_FORM_IMAGE[file_type])
 
@@ -76,22 +143,24 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
     contents = base64.b64decode(base64_data)
     size = len(contents)
 
-    file_name = ''
-
     if file_type in SUPPORTED_FILE_TYPES_FORM_AUDIO:
         max_size = 8 * MB
         error_message = f'Audio file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.'
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
-        max_size = 50 * MB if file_type in ['video/mp4', 'video/webm'] else 8 * MB
+        max_size = 50 * MB
         error_message = f'Video file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.'
-        if size > max_size:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=error_message
-            )
-        if size > 8 * MB:
-            contents = await compress_video(contents)
+
+        container = av.open(BytesIO(contents))
+        video_stream_info = container.streams.video[0]
+        width = video_stream_info.width
+        height = video_stream_info.height
+
+        resize_flag = width >= 1920 or height >= 1080
+        size_flag = size >= 8 * MB
+
+        if resize_flag or size_flag:
+            contents = await compress_video(contents, file_type, resize_flag, size_flag)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
@@ -99,19 +168,21 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         img = Image.open(BytesIO(contents))
         width, height = img.size
 
-        if width <= 10 or height <= 10:
+        if width <= 100 or height <= 100:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Image size is too small to be previewed. More than 10x10 is required.'
+                detail='Image size is too small. More than 100x100 is required.'
             )
         if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-            contents = await compress_image(file_type, contents)
+            contents = compress_image(file_type, contents)
 
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Unsupported file type: {file_type}. '
-                   f'Supported types are {SUPPORTED_FILE_TYPES_FORM_AUDIO + SUPPORTED_FILE_TYPES_FORM_VIDEO + SUPPORTED_FILE_TYPES_FORM_IMAGE}'
+                   f'Supported types are {SUPPORTED_FILE_TYPES_FORM_AUDIO}'
+                   f'{SUPPORTED_FILE_TYPES_FORM_VIDEO}'
+                   f'{SUPPORTED_FILE_TYPES_FORM_IMAGE}'
         )
 
     if size > max_size:
