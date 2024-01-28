@@ -21,17 +21,6 @@ async def update_me(
     return await update_user_data(session, current_user, request)
 
 
-@router.get("/get/me")
-async def get_me(
-        session: AsyncSession = Depends(get_async_session),
-        current_user: UserRead = Depends(fastapi_users.current_user()),
-):
-    """
-    Return a current user
-    """
-    return await get_current_user(session, current_user)
-
-
 @router.post("/profile_picture")
 async def upload_profile_picture(
         file: Optional[UploadFile] = None,
