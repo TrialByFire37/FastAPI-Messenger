@@ -170,61 +170,6 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     return FileRead(file_name=file_name)
 
 
-# async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileRead]:
-#     if not base64_data:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail='Base64 data not found!'
-#         )
-#
-#     contents = base64.b64decode(base64_data)
-#     size = len(contents)
-#
-#     file_name = ''
-#
-#     if file_type in SUPPORTED_FILE_TYPES_FORM_AUDIO:
-#         max_size = 8 * MB
-#         error_message = f'Audio file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
-#     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
-#         if file_type == 'video/mp4' or file_type == 'video/webm':
-#             max_size = 50 * MB
-#         else:
-#             max_size = 8 * MB
-#         error_message = f'Video file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
-#
-#     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
-#         max_size = 10 * MB
-#         error_message = 'Image file size should not exceed 10 MB.'
-#         img = Image.open(BytesIO(contents))
-#         width, height = img.size
-#
-#         if width <= 10 or height <= 10:
-#             raise HTTPException(
-#                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail='Image size is too small to be previewed. More than 10x10 is required.'
-#             )
-#         if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-#             contents = await compress_image(file_type, BytesIO(contents))
-#
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=f'Unsupported file type: {file_type}. '
-#                    f'Supported types are {SUPPORTED_FILE_TYPES_FORM_AUDIO + SUPPORTED_FILE_TYPES_FORM_VIDEO + SUPPORTED_FILE_TYPES_FORM_IMAGE}'
-#         )
-#
-#     if size > max_size:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=error_message
-#         )
-#
-#     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_IMAGE[file_type]}' if file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE else file_name
-#     await s3_upload(contents=contents, key=file_name)
-#     return FileRead(file_name=file_name)
-#
-
-
 async def get_url(file_name: Optional[str] = None):
     if not file_name:
         raise HTTPException(
