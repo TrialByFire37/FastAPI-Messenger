@@ -11,13 +11,7 @@ from auth.exceptions import InvalidLoginException
 from auth.models import User
 from auth.schemas import UserCreate
 from auth.utils import get_user_db
-from database import get_async_session_context
-
-
-async def get_by_username(username: str) -> Optional[User]:
-    async with get_async_session_context() as session:
-        user = await session.execute(select(User).filter(User.username == username))
-        return user.scalar_one_or_none()
+from database import get_async_session
 
 
 async def validate_username(username: str) -> None:
@@ -36,10 +30,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     # если логин все таки это email удалить данную фукнцию!
     async def authenticate(self, credentials: OAuth2PasswordRequestForm) -> Optional[User]:
-        user = await get_by_username(credentials.username)
+        session = await get_async_session()
+        statement = select(User).where(User.username == credentials.username)
+        result = await session.execute(statement)
+        user = result.scalar()
 
         if user is None:
-            self.password_helper.hash(credentials.password)
             return None
 
         verified, updated_password_hash = self.password_helper.verify_and_update(
@@ -49,7 +45,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             return None
         # Update password hash to a more robust one if needed
         if updated_password_hash is not None:
-            await self.user_db.update(user, {"hashed_password": updated_password_hash})
+            user.hashed_password = updated_password_hash
+            session.add(user)
+            await session.commit()
 
         return user
 
