@@ -21,91 +21,75 @@ from aws.utils import s3_download, s3_upload, s3_URL
 # todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool, size_flag: bool) -> bytes:
     try:
-        in_stream = BytesIO(video_data)
-        in_container = av.open(in_stream)
-        in_audio = in_container.streams.audio[0]
-        in_video = in_container.streams.video[0]
+        in_container = av.open(BytesIO(video_data))
         output_options = {}
         acodec = ""
         vcodec = ""
 
         # Define format-specific options
         if file_type == 'video/mp4' or file_type == 'video/mov':
-            output_options = {'c:v': 'libx264', 'crf': '0', 'vf': 'scale=1280:720'}
+            output_options = {'c:v': 'libx264', 'crf': '0'}
             acodec = "aac"
             vcodec = "h264"
         elif file_type == 'video/webm':
-            output_options = {'c:v': 'libvpx-vp9', 'b:v': '2M', 'crf': '0', 'vf': 'scale=1280:720'}
+            output_options = {'c:v': 'libvpx-vp9', 'b:v': '2M', 'crf': '0'}
             acodec = "vorbis"
             vcodec = "vp8"
         elif file_type == 'video/avi':
-            output_options = {'c:v': 'msmpeg4', 'crf': '0', 'vf': 'scale=1280:720'}
+            output_options = {'c:v': 'msmpeg4', 'crf': '0'}
             acodec = "mp3"
             vcodec = "mpeg4"
 
-        out_stream = BytesIO()
+        out_file = BytesIO()
 
         if resize_flag:
-            out_container = av.open(out_stream, format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
-                                    mode='w', options=output_options)
-            #out_video = out_container.add_stream(vcodec)
-            #out_audio = out_container.add_stream(acodec)
-            out_audio = out_container.add_stream(template=in_audio)
-            out_video = out_container.add_stream(template=in_video)
+            out_container = av.open(out_file, mode='w', format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
+                                    options=output_options)
+            out_video = out_container.add_stream(template=in_container.streams.video[0])
+            out_audio = out_container.add_stream(template=in_container.streams.audio[0])
 
-            # for frame_video in in_container.decode(in_container.streams.video[0]):
-            #     packet = out_video.encode(frame_video)
-            #     out_container.mux(packet)
-            #
-            # for frame_audio in in_container.decode(in_container.streams.audio[0]):
-            #     packet = out_audio.encode(frame_audio)
-            #     out_container.mux(packet)
-            for packet in in_container.demux(in_video):
-                if packet.dts is None:
-                    continue
-
-                packet.stream = out_video
-                out_container.mux(packet)
-
-            for packet in in_container.demux(in_audio):
-                if packet.dts is None:
-                    continue
-
-                packet.stream = out_audio
-                out_container.mux(packet)
+            for packet in in_container.demux():
+                for frame in packet.decode():
+                    if packet.stream.type == 'video':
+                        frame = frame.reformat(width=1280, height=720)
+                        packet = out_video.encode(frame)
+                    elif packet.stream.type == 'audio':
+                        packet = out_audio.encode(frame)
+                    out_container.mux(packet)
 
             out_container.close()
 
-            compressed_size = len(out_stream.getvalue())
+            compressed_size = len(out_file.getvalue())
 
             # Check if the file is smaller than 8 MB after resizing
             if not size_flag and compressed_size <= 8 * MB:
-                return out_stream.getvalue()
+                return out_file.getvalue()
 
         # If size_flag is True or if resizing did not bring the file size below 8 MB
         if size_flag:
             output_options['crf'] = 18
             # Compress video based on file size
             while True:
-                out_container = av.open(out_stream, format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
-                                        mode='w', options=output_options)
-                out_video = out_container.add_stream(vcodec)
-                out_audio = out_container.add_stream(acodec)
+                out_container = av.open(out_file, mode='w',
+                                        format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
+                                        options=output_options)
+                out_video = out_container.add_stream(template=in_container.streams.video[0])
+                out_audio = out_container.add_stream(template=in_container.streams.audio[0])
 
-                for frame_video in in_container.decode(in_container.streams.video[0]):
-                    packet = out_video.encode(frame_video)
-                    out_container.mux(packet)
-
-                for frame_audio in in_container.decode(in_container.streams.audio[0]):
-                    packet = out_audio.encode(frame_audio)
-                    out_container.mux(packet)
+                for packet in in_container.demux():
+                    for frame in packet.decode():
+                        if packet.stream.type == 'video':
+                            packet = out_video.encode(frame)
+                        elif packet.stream.type == 'audio':
+                            packet = out_audio.encode(frame)
+                        out_container.mux(packet)
 
                 out_container.close()
 
-                compressed_size = len(out_stream.getvalue())
+                compressed_size = len(out_file.getvalue())
 
                 if 8 * MB <= compressed_size:
-                    return out_stream.getvalue()
+                    return out_file.getvalue()
 
     except Exception as e:
         raise HTTPException(
@@ -239,61 +223,6 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
 
     await s3_upload(contents=contents, key=file_name)
     return FileRead(file_name=file_name)
-
-
-# async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileRead]:
-#     if not base64_data:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail='Base64 data not found!'
-#         )
-#
-#     contents = base64.b64decode(base64_data)
-#     size = len(contents)
-#
-#     file_name = ''
-#
-#     if file_type in SUPPORTED_FILE_TYPES_FORM_AUDIO:
-#         max_size = 8 * MB
-#         error_message = f'Audio file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
-#     elif file_type in SUPPORTED_FILE_TYPES_FORM_VIDEO:
-#         if file_type == 'video/mp4' or file_type == 'video/webm':
-#             max_size = 50 * MB
-#         else:
-#             max_size = 8 * MB
-#         error_message = f'Video file size exceeds the maximum allowed one of {max_size/MB} MB. Try another one.'
-#
-#     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
-#         max_size = 10 * MB
-#         error_message = 'Image file size should not exceed 10 MB.'
-#         img = Image.open(BytesIO(contents))
-#         width, height = img.size
-#
-#         if width <= 10 or height <= 10:
-#             raise HTTPException(
-#                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail='Image size is too small to be previewed. More than 10x10 is required.'
-#             )
-#         if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-#             contents = await compress_image(file_type, BytesIO(contents))
-#
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=f'Unsupported file type: {file_type}. '
-#                    f'Supported types are {SUPPORTED_FILE_TYPES_FORM_AUDIO + SUPPORTED_FILE_TYPES_FORM_VIDEO + SUPPORTED_FILE_TYPES_FORM_IMAGE}'
-#         )
-#
-#     if size > max_size:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=error_message
-#         )
-#
-#     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_IMAGE[file_type]}' if file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE else file_name
-#     await s3_upload(contents=contents, key=file_name)
-#     return FileRead(file_name=file_name)
-#
 
 
 async def get_url(file_name: Optional[str] = None):
