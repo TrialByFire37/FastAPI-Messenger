@@ -7,6 +7,9 @@ from fastapi_users import schemas
 class UserRead(schemas.BaseUser[int]):
     id: int
     username: str
+    last_name: Optional[str]
+    first_name: Optional[str]
+    surname: Optional[str]
     image_url: Optional[str]
     creation_date: datetime
     is_active: bool = True

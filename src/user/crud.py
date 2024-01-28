@@ -13,22 +13,6 @@ from user.schemas import UserReadRequest, UserBaseReadRequest, UserUpdateRequest
 logger = logging.getLogger(__name__)
 
 
-async def get_current_user(session: AsyncSession, current_user: UserRead) -> UserReadRequest:
-    user_instance = (await session.execute(
-        select(user)
-        .where(user.c.id == current_user.id)
-    )).one()
-
-    await session.commit()
-    return UserPersonalReadRequest(
-        user_id=user_instance.id,
-        username=user_instance.username,
-        last_name=user_instance.last_name,
-        first_name=user_instance.first_name,
-        surname=user_instance.surname
-    )
-
-
 async def get_user_by_id(session: AsyncSession, user_id: int) -> UserReadRequest:
     user_instance = (await session.execute(select(user).filter_by(id=user_id))).one()
     await session.commit()
