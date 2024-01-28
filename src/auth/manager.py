@@ -1,15 +1,17 @@
-from typing import Optional, Union
 import re
+from typing import Optional, Union
 
 from fastapi import Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, IntegerIDMixin, InvalidPasswordException, schemas, exceptions
+from sqlalchemy import select
 
 from auth.config import SECRET_AUTH
 from auth.exceptions import InvalidLoginException
 from auth.models import User
 from auth.schemas import UserCreate
 from auth.utils import get_user_db
-
+from database import get_async_session
 
 
 async def validate_username(username: str) -> None:
@@ -25,6 +27,29 @@ async def validate_username(username: str) -> None:
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET_AUTH
     verification_token_secret = SECRET_AUTH
+
+    # если логин все таки это email удалить данную фукнцию!
+    async def authenticate(self, credentials: OAuth2PasswordRequestForm) -> User | None:
+        session = await get_async_session()
+        statement = select(User).where(User.username == credentials.username)
+        result = await session.execute(statement)
+        user = result.scalar()
+
+        if user is None:
+            return None
+
+        verified, updated_password_hash = self.password_helper.verify_and_update(
+            credentials.password, user.hashed_password
+        )
+        if not verified:
+            return None
+        # Update password hash to a more robust one if needed
+        if updated_password_hash is not None:
+            user.hashed_password = updated_password_hash
+            session.add(user)
+            await session.commit()
+
+        return user
 
     async def create(self, user_create: schemas.UC, safe: bool = True, request: Optional[Request] = None) -> User:
 
