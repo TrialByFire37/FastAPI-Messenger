@@ -21,75 +21,63 @@ from aws.utils import s3_download, s3_upload, s3_URL
 # todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool, size_flag: bool) -> bytes:
     try:
-        in_container = av.open(BytesIO(video_data))
-        output_options = {}
-        acodec = ""
-        vcodec = ""
+        # Определение формата и кодеков
+        format_name, audio_codec, video_codec = SUPPORTED_FILE_TYPES_FORM_VIDEO.get(file_type)
 
-        # Define format-specific options
-        if file_type == 'video/mp4' or file_type == 'video/mov':
-            output_options = {'c:v': 'libx264', 'crf': '0'}
-            acodec = "aac"
-            vcodec = "h264"
-        elif file_type == 'video/webm':
-            output_options = {'c:v': 'libvpx-vp9', 'b:v': '2M', 'crf': '0'}
-            acodec = "vorbis"
-            vcodec = "vp8"
-        elif file_type == 'video/avi':
-            output_options = {'c:v': 'msmpeg4', 'crf': '0'}
-            acodec = "mp3"
-            vcodec = "mpeg4"
+        # Создание контейнера для входного видео
+        input_container = av.open(BytesIO(video_data), mode='r')
 
-        out_file = BytesIO()
+        # Создание байтового потока для выходного видео
+        output_io = BytesIO()
 
-        if resize_flag:
-            out_container = av.open(out_file, mode='w', format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
-                                    options=output_options)
-            out_video = out_container.add_stream(template=in_container.streams.video[0])
-            out_audio = out_container.add_stream(template=in_container.streams.audio[0])
+        # Создание контейнера для выходного видео
+        output_container = av.open(output_io, mode='w', format=format_name)
 
-            for packet in in_container.demux():
+        # Создание потоков для выходного видео
+        out_stream_v = output_container.add_stream(video_codec)
+        out_stream_a = output_container.add_stream(audio_codec)
+
+        # Перебор потоков входного видео
+        for packet in input_container.demux():
+            if packet.stream.type == 'video':
+                # Декодирование пакета
+                frames = packet.decode()
+
+                for frame in frames:
+                    # Проверка соотношения сторон
+                    aspect_ratio = frame.width / frame.height
+                    if aspect_ratio not in [1, 4/3, 16/9, 16/10]:
+                        continue
+
+                    # Проверка и изменение размера
+                    if max(frame.width, frame.height) > 720:
+                        out_stream_v.height = 720
+                        out_stream_v.width = int(720 * aspect_ratio)
+
+                    # Перекодирование фрейма
+                    for packet in out_stream_v.encode(frame):
+                        if packet.pts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
+                            packet.pts = int(packet.pts * out_stream_v.time_base / packet.time_base)
+                        if packet.dts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
+                            packet.dts = int(packet.dts * out_stream_v.time_base / packet.time_base)
+                        output_container.mux(packet)
+
+            elif packet.stream.type == 'audio':
+                # Перекодирование аудио
                 for frame in packet.decode():
-                    if packet.stream.type == 'video':
-                        frame = frame.reformat(width=1280, height=720)
-                        packet = out_video.encode(frame)
-                    elif packet.stream.type == 'audio':
-                        packet = out_audio.encode(frame)
-                    out_container.mux(packet)
+                    for packet in out_stream_a.encode(frame):
+                        if packet.pts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
+                            packet.pts = int(packet.pts * out_stream_a.time_base / packet.time_base)
+                        if packet.dts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
+                            packet.dts = int(packet.dts * out_stream_a.time_base / packet.time_base)
+                        output_container.mux(packet)
 
-            out_container.close()
+        # Закрытие контейнеров
+        input_container.close()
+        output_container.close()
 
-            compressed_size = len(out_file.getvalue())
-
-            # Check if the file is smaller than 8 MB after resizing
-            if not size_flag and compressed_size <= 8 * MB:
-                return out_file.getvalue()
-
-        # If size_flag is True or if resizing did not bring the file size below 8 MB
-        if size_flag:
-            output_options['crf'] = 18
-            # Compress video based on file size
-            while True:
-                out_container = av.open(out_file, mode='w',
-                                        format=f'{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}',
-                                        options=output_options)
-                out_video = out_container.add_stream(template=in_container.streams.video[0])
-                out_audio = out_container.add_stream(template=in_container.streams.audio[0])
-
-                for packet in in_container.demux():
-                    for frame in packet.decode():
-                        if packet.stream.type == 'video':
-                            packet = out_video.encode(frame)
-                        elif packet.stream.type == 'audio':
-                            packet = out_audio.encode(frame)
-                        out_container.mux(packet)
-
-                out_container.close()
-
-                compressed_size = len(out_file.getvalue())
-
-                if 8 * MB <= compressed_size:
-                    return out_file.getvalue()
+        # Возвращение сжатого видео
+        return output_io.getvalue()
 
     except Exception as e:
         raise HTTPException(
