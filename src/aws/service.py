@@ -19,10 +19,19 @@ from aws.utils import s3_download, s3_upload, s3_URL
 # по весу (отсюда и не загружаются)
 
 # todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
-async def compress_video(video_data: bytes, file_type: str, resize_flag: bool, size_flag: bool) -> bytes:
+async def compress_video(video_data: bytes, file_type: str) -> bytes:
     try:
         # Определение формата и кодеков
-        format_name, audio_codec, video_codec = SUPPORTED_FILE_TYPES_FORM_VIDEO.get(file_type)
+        format_name = SUPPORTED_FILE_TYPES_FORM_VIDEO.get(file_type)
+
+        if format_name == 'mp4':
+            audio_codec, video_codec = 'aac', 'h264'
+        elif format_name == 'webm':
+            audio_codec, video_codec = 'vorbis', 'vp8'
+        elif format_name == 'avi':
+            audio_codec, video_codec = 'mp3', 'mpeg4'
+        elif format_name == 'mov':
+            audio_codec, video_codec = 'aac', 'h264'
 
         # Создание контейнера для входного видео
         input_container = av.open(BytesIO(video_data), mode='r')
@@ -46,7 +55,7 @@ async def compress_video(video_data: bytes, file_type: str, resize_flag: bool, s
                 for frame in frames:
                     # Проверка соотношения сторон
                     aspect_ratio = frame.width / frame.height
-                    if aspect_ratio not in [1, 4/3, 16/9, 16/10]:
+                    if aspect_ratio not in [1, 4 / 3, 16 / 9, 16 / 10]:
                         continue
 
                     # Проверка и изменение размера
@@ -132,7 +141,7 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         size_flag = size >= 8 * MB
 
         if resize_flag or size_flag:
-            contents = await compress_video(contents, file_type, resize_flag, size_flag)
+            contents = await compress_video(contents, file_type)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
