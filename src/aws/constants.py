@@ -9,10 +9,10 @@ SUPPORTED_FILE_TYPES_FORM_APPLICATION = {
     'image/jpeg': 'jpeg',
     'image/webp': 'webp',
 
-    'video/mp4': ['mp4', 'aac', 'h264'],
-    'video/webm': ['webm', 'vorbis', 'vp8'],
-    'video/avi': ['avi', 'mp3', 'mpeg4'],
-    'video/mov': ['mov' 'aac', 'h264'],
+    'video/mp4': 'mp4',
+    'video/webm': 'webm',
+    'video/avi': 'avi',
+    'video/mov': 'mov',
 
     'audio/mpeg': 'mp3',
     'audio/x-wav': 'wav',
