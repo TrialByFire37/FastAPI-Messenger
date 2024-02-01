@@ -13,86 +13,78 @@ from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE, SUPPORTED_FILE_TY
 from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
 
+import io
+import ffmpeg
 
-# todo: FS_Media_2: прикрепляешь совсем мелкие картинки - появляются сперва как пустые
-# сообщение, и после перезагрузки страницы исчезают; 1080p не сжимается по соотношению до 720p; видео не сжимаются
-# по весу (отсюда и не загружаются)
+VVV = {
+    'video/mp4': ['mp4', 'aac', 'h264'],
+    'video/webm': ['webm', 'vorbis', 'vp8'],
+    'video/avi': ['avi', 'mp3', 'mpeg4'],
+    'video/mov': ['mov', 'aac', 'h264']
+}
 
-# todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
+
 async def compress_video(video_data: bytes, file_type: str) -> bytes:
     try:
         # Определение формата и кодеков
-        format_name = SUPPORTED_FILE_TYPES_FORM_VIDEO.get(file_type)
+        format_name, audio_codec, video_codec = VVV.get(file_type)
 
-        if format_name == 'mp4':
-            audio_codec, video_codec = 'aac', 'h264'
-        elif format_name == 'webm':
-            audio_codec, video_codec = 'vorbis', 'vp8'
-        elif format_name == 'avi':
-            audio_codec, video_codec = 'mp3', 'mpeg4'
-        elif format_name == 'mov':
-            audio_codec, video_codec = 'aac', 'h264'
+        # Создание file-like объекта
+        video_file = BytesIO(video_data)
 
-        # Создание контейнера для входного видео
-        input_container = av.open(BytesIO(video_data), mode='r')
+        # Получение информации о видео
+        probe = ffmpeg.probe(video_data)
+        video_info = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+        width = int(video_info['width'])
+        height = int(video_info['height'])
 
-        # Создание байтового потока для выходного видео
-        output_io = BytesIO()
+        # Проверка соотношения сторон
+        aspect_ratio = width / height
+        standard_ratios = [1, 4 / 3, 16 / 9, 16 / 10]
+        if aspect_ratio not in standard_ratios:
+            raise ValueError("Видео не соответствует стандартным соотношениям сторон")
 
-        # Создание контейнера для выходного видео
-        output_container = av.open(output_io, mode='w', format=format_name)
+        # Установка параметров сжатия
+        resolution = '720p' if max(width, height) > 720 else None
 
-        # Создание потоков для выходного видео
-        out_stream_v = output_container.add_stream(video_codec)
-        out_stream_a = output_container.add_stream(audio_codec)
+        mem_in_MiB = len(video_data) / MB
 
-        # Перебор потоков входного видео
-        for packet in input_container.demux():
-            if packet.stream.type == 'video':
-                # Декодирование пакета
-                frames = packet.decode()
+        crf = 18
+        if resolution is None:
+            if 8 < mem_in_MiB <= 10:
+                crf = 19
+            elif 10 < mem_in_MiB <= 12:
+                crf = 20
+            elif 12 < mem_in_MiB <= 15:
+                crf = 21
+            elif 15 < mem_in_MiB <= 20:
+                crf = 22
+            elif 20 < mem_in_MiB <= 25:
+                crf = 23
+            elif 25 < mem_in_MiB <= 30:
+                crf = 24
+            elif 30 < mem_in_MiB <= 35:
+                crf = 25
+            elif 35 < mem_in_MiB <= 40:
+                crf = 26
+            elif 40 < mem_in_MiB <= 45:
+                crf = 27
+            elif 45 < mem_in_MiB <= 50:
+                crf = 28
+            else:
+                crf = 40
 
-                for frame in frames:
-                    # Проверка соотношения сторон
-                    aspect_ratio = frame.width / frame.height
-                    if aspect_ratio not in [1, 4 / 3, 16 / 9, 16 / 10]:
-                        continue
+        # Перекодирование видео
+        output_file = BytesIO()
+        ffmpeg.input('pipe:0').output('pipe:1', format=format_name, vcodec=video_codec, acodec=audio_codec, crf=crf,
+                                      vf='scale=-1:720' if resolution else None).run(input=video_file,
+                                                                                     output=output_file)
 
-                    # Проверка и изменение размера
-                    if max(frame.width, frame.height) > 720:
-                        out_stream_v.height = 720
-                        out_stream_v.width = int(720 * aspect_ratio)
-
-                    # Перекодирование фрейма
-                    for packet in out_stream_v.encode(frame):
-                        if packet.pts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
-                            packet.pts = int(packet.pts * out_stream_v.time_base / packet.time_base)
-                        if packet.dts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
-                            packet.dts = int(packet.dts * out_stream_v.time_base / packet.time_base)
-                        output_container.mux(packet)
-
-            elif packet.stream.type == 'audio':
-                # Перекодирование аудио
-                for frame in packet.decode():
-                    for packet in out_stream_a.encode(frame):
-                        if packet.pts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
-                            packet.pts = int(packet.pts * out_stream_a.time_base / packet.time_base)
-                        if packet.dts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
-                            packet.dts = int(packet.dts * out_stream_a.time_base / packet.time_base)
-                        output_container.mux(packet)
-
-        # Закрытие контейнеров
-        input_container.close()
-        output_container.close()
-
-        # Возвращение сжатого видео
-        return output_io.getvalue()
+        return output_file.getvalue()
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error compressing video: {str(e)}'
-        )
+        print(f"Ошибка при сжатии видео: {e}")
+        return video_data
 
 
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
