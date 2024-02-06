@@ -85,11 +85,11 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
             api_id = api_instance.post_render(edit)
             id = api_id['response']['id']
 
-            for _ in range(60):
-                api_response = api_instance.get_render(id, data=False, merged=True)
-                status = api_response['response']['status']
-                print('Status: ' + status.upper() + '\n')
+            api_response = api_instance.get_render(id, data=False, merged=True)
+            status = api_response['response']['status']
+            print('Status: ' + status.upper() + '\n')
 
+            for _ in range(60):
                 if status == "done":
                     url = api_response['response']['url']
                     return url
