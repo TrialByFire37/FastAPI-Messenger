@@ -43,15 +43,9 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
 
         streams = api_response['response']['metadata']['streams']
 
-        h = None
-        w = None
-        frameCount = None
         duration = None
         for stream in streams:
             if stream['codec_type'] == "video":
-                w = stream['width']
-                h = stream['height']
-                frameCount = stream['r_frame_rate']
                 duration = stream['duration']
 
         video_asset = VideoAsset(
@@ -61,7 +55,7 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
         video_clip = Clip(
             asset=video_asset,
             start=0.0,
-            length=duration
+            length=float(duration)
         )
 
         track = Track(clips=[video_clip])
@@ -81,28 +75,28 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
             output=output
         )
 
+        url = None
         try:
             api_id = api_instance.post_render(edit)
             id = api_id['response']['id']
 
             api_response = api_instance.get_render(id, data=False, merged=True)
+            time.sleep(10)
+            status = api_response['response']['status']
+            print('Status: ' + status.upper() + '\n')
 
-            for _ in range(60):
-                status = api_response['response']['status']
-                if status == "done":
-                    url = api_response['response']['url']
-                    return url
-                elif status == 'failed':
-                    print(">> Something went wrong, rendering has terminated and will not continue.")
-                    break
-                else:
-                    print(
-                        ">> Rendering in progress, please try again shortly.\n>> Note: Rendering may take up to 1 minute to complete.")
-                    time.sleep(1)
+            if status == "done":
+                url = api_response['response']['url']
+            elif status == 'failed':
+                print(">> Something went wrong, rendering has terminated and will not continue.")
+            else:
+                print(
+                    ">> Rendering in progress, please try again shortly.\n>> Note: Rendering may take up to 1 minute "
+                    "to complete.")
         except Exception as e:
             print(f"Unable to resolve API call: {e}")
 
-    return FileRead(file_name=file_name)
+    return FileRead(file_name=str(url))
 
 
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
