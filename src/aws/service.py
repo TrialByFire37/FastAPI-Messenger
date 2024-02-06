@@ -4,7 +4,6 @@ from io import BytesIO
 from typing import Optional
 from uuid import uuid4
 
-import av
 import magic
 from PIL import Image
 from fastapi import HTTPException, Response, UploadFile, status
@@ -23,6 +22,7 @@ from shotstack_sdk.model.timeline import Timeline
 from shotstack_sdk.model.track import Track
 from shotstack_sdk.model.video_asset import VideoAsset
 import certifi
+
 
 
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -> FileRead:
@@ -94,6 +94,7 @@ async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -
     return FileRead(file_name=str(url))
 
 
+
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
     try:
         img = Image.open(BytesIO(image_data))
@@ -141,6 +142,12 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
 
         if resize_flag or size_flag:
             return await compress_video(contents, file_type, resize_flag)
+
+        if size > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_message
+            )
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
