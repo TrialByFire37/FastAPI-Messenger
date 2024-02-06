@@ -3,7 +3,6 @@ from io import BytesIO
 from typing import Optional
 from uuid import uuid4
 
-import av
 import magic
 from PIL import Image
 from fastapi import HTTPException, Response, UploadFile, status
@@ -12,39 +11,6 @@ from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE, SUPPORTED_FILE_TY
     SUPPORTED_FILE_TYPES_FORM_VIDEO, SUPPORTED_FILE_TYPES_FORM_APPLICATION
 from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
-
-
-async def compress_video(video_data: bytes) -> bytes:
-    try:
-        # Create a BytesIO object from the passed video_data
-        video_stream = BytesIO(video_data)
-
-        # Open video container
-        container = av.open(video_stream)
-
-        # Get video stream details
-        video_stream_info = container.streams.video[0]
-        width = video_stream_info.width
-        height = video_stream_info.height
-
-        if width >= 1920 or height >= 1080:
-            # Scale the video if needed
-            output_options = {'c:v': 'libx264', 'vf': 'scale=1280:720'}
-            output_stream = av.open('pipe:', format='mp4', mode='w')
-            for frame in container.decode(video=0):
-                output_stream.encode(frame)
-            output_stream.close()
-            compressed_video_data = output_stream.muxed
-        else:
-            compressed_video_data = video_data
-
-        return compressed_video_data
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error compressing video: {str(e)}'
-        )
 
 
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
@@ -90,8 +56,6 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_message
             )
-        if size > 8 * MB:
-            contents = await compress_video(contents)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
