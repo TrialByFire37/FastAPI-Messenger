@@ -1,4 +1,5 @@
 import base64
+import time
 from io import BytesIO
 from typing import Optional
 from uuid import uuid4
@@ -84,18 +85,21 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
             api_id = api_instance.post_render(edit)
             id = api_id['response']['id']
 
-            api_response = api_instance.get_render(id, data=False, merged=True)
-            status = api_response['response']['status']
-            print('Status: ' + status.upper() + '\n')
+            for _ in range(60):
+                api_response = api_instance.get_render(id, data=False, merged=True)
+                status = api_response['response']['status']
+                print('Status: ' + status.upper() + '\n')
 
-            if status == "done":
-                url = api_response['response']['url']
-                return url
-            elif status == 'failed':
-                print(">> Something went wrong, rendering has terminated and will not continue.")
-            else:
-                print(
-                    ">> Rendering in progress, please try again shortly.\n>> Note: Rendering may take up to 1 minute to complete.")
+                if status == "done":
+                    url = api_response['response']['url']
+                    return url
+                elif status == 'failed':
+                    print(">> Something went wrong, rendering has terminated and will not continue.")
+                    break
+                else:
+                    print(
+                        ">> Rendering in progress, please try again shortly.\n>> Note: Rendering may take up to 1 minute to complete.")
+                    time.sleep(1)
         except Exception as e:
             print(f"Unable to resolve API call: {e}")
 
