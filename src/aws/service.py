@@ -14,85 +14,13 @@ from aws.schemas import FileRead
 from aws.utils import s3_download, s3_upload, s3_URL
 
 
-# todo: FS_Media_2: прикрепляешь совсем мелкие картинки - появляются сперва как пустые
-# сообщение, и после перезагрузки страницы исчезают; 1080p не сжимается по соотношению до 720p; видео не сжимаются
-# по весу (отсюда и не загружаются)
+async def compress_video(video_data: bytes, file_type: str) -> FileRead:
+    file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
+    await s3_upload(contents=video_data, key=file_name)
 
-# todo: FS_Media_3: файлы любого формата можно прикрепить. Мб в проводнике задать ограничение для разрешений файлов?
-async def compress_video(video_data: bytes, file_type: str) -> bytes:
-    try:
-        # Определение формата и кодеков
-        format_name = SUPPORTED_FILE_TYPES_FORM_VIDEO.get(file_type)
+    current_video_url_in_backblaze = await get_url(file_name)
 
-        if format_name == 'mp4':
-            audio_codec, video_codec = 'aac', 'h264'
-        elif format_name == 'webm':
-            audio_codec, video_codec = 'vorbis', 'vp8'
-        elif format_name == 'avi':
-            audio_codec, video_codec = 'mp3', 'mpeg4'
-        elif format_name == 'mov':
-            audio_codec, video_codec = 'aac', 'h264'
-
-        # Создание контейнера для входного видео
-        input_container = av.open(BytesIO(video_data), mode='r')
-
-        # Создание байтового потока для выходного видео
-        output_io = BytesIO()
-
-        # Создание контейнера для выходного видео
-        output_container = av.open(output_io, mode='w', format=format_name)
-
-        # Создание потоков для выходного видео
-        out_stream_v = output_container.add_stream(video_codec)
-        out_stream_a = output_container.add_stream(audio_codec)
-
-        # Перебор потоков входного видео
-        for packet in input_container.demux():
-            if packet.stream.type == 'video':
-                # Декодирование пакета
-                frames = packet.decode()
-
-                for frame in frames:
-                    # Проверка соотношения сторон
-                    aspect_ratio = frame.width / frame.height
-                    if aspect_ratio not in [1, 4 / 3, 16 / 9, 16 / 10]:
-                        continue
-
-                    # Проверка и изменение размера
-                    if max(frame.width, frame.height) > 720:
-                        out_stream_v.height = 720
-                        out_stream_v.width = int(720 * aspect_ratio)
-
-                    # Перекодирование фрейма
-                    for packet in out_stream_v.encode(frame):
-                        if packet.pts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
-                            packet.pts = int(packet.pts * out_stream_v.time_base / packet.time_base)
-                        if packet.dts is not None and packet.time_base is not None and out_stream_v.time_base is not None:
-                            packet.dts = int(packet.dts * out_stream_v.time_base / packet.time_base)
-                        output_container.mux(packet)
-
-            elif packet.stream.type == 'audio':
-                # Перекодирование аудио
-                for frame in packet.decode():
-                    for packet in out_stream_a.encode(frame):
-                        if packet.pts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
-                            packet.pts = int(packet.pts * out_stream_a.time_base / packet.time_base)
-                        if packet.dts is not None and packet.time_base is not None and out_stream_a.time_base is not None:
-                            packet.dts = int(packet.dts * out_stream_a.time_base / packet.time_base)
-                        output_container.mux(packet)
-
-        # Закрытие контейнеров
-        input_container.close()
-        output_container.close()
-
-        # Возвращение сжатого видео
-        return output_io.getvalue()
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error compressing video: {str(e)}'
-        )
+    return FileRead(file_name=file_name)
 
 
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
@@ -141,7 +69,7 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         size_flag = size >= 8 * MB
 
         if resize_flag or size_flag:
-            contents = await compress_video(contents, file_type)
+            return await compress_video(contents, file_type)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
