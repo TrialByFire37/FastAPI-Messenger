@@ -25,7 +25,7 @@ from shotstack_sdk.model.video_asset import VideoAsset
 import certifi
 
 
-async def compress_video(video_data: bytes, file_type: str) -> FileRead:
+async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -> FileRead:
     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
     await s3_upload(contents=video_data, key=file_name)
 
@@ -64,35 +64,30 @@ async def compress_video(video_data: bytes, file_type: str) -> FileRead:
             background="#000000",
             tracks=[track]
         )
+        if resize_flag:
+            output = Output(format="mp4", resolution="hd")
+        else:
+            output = Output(format="mp4")
 
-        output = Output(
-            format="mp4",
-            resolution="sd"
-        )
-
-        edit = Edit(
-            timeline=timeline,
-            output=output
-        )
+        edit = Edit(timeline=timeline, output=output)
 
         url = None
         try:
             api_id = api_instance.post_render(edit)
             id = api_id['response']['id']
 
-            api_response = api_instance.get_render(id, data=False, merged=True)
-            time.sleep(10)
-            status = api_response['response']['status']
-            print('Status: ' + status.upper() + '\n')
+            while True:
+                api_response = api_instance.get_render(id, data=False, merged=True)
+                status = api_response['response']['status']
+                if status == "done":
+                    url = api_response['response']['url']
+                    break
+                elif status == 'failed':
+                    print(">> Something went wrong, rendering has terminated and will not continue.")
+                    break
+                print('Status: ' + status.upper() + '\n')
+                time.sleep(1)
 
-            if status == "done":
-                url = api_response['response']['url']
-            elif status == 'failed':
-                print(">> Something went wrong, rendering has terminated and will not continue.")
-            else:
-                print(
-                    ">> Rendering in progress, please try again shortly.\n>> Note: Rendering may take up to 1 minute "
-                    "to complete.")
         except Exception as e:
             print(f"Unable to resolve API call: {e}")
 
@@ -145,7 +140,7 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         size_flag = size >= 8 * MB
 
         if resize_flag or size_flag:
-            return await compress_video(contents, file_type)
+            return await compress_video(contents, file_type, resize_flag)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
