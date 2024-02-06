@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import Optional
 from uuid import uuid4
 
+import av
 import magic
 from PIL import Image
 from fastapi import HTTPException, Response, UploadFile, status
