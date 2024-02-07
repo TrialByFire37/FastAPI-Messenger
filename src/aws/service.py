@@ -25,7 +25,6 @@ from shotstack_sdk.model.video_asset import VideoAsset
 import certifi
 
 
-
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -> FileRead:
     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
     await s3_upload(contents=video_data, key=file_name)
@@ -95,7 +94,6 @@ async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -
     return FileRead(file_name=str(url))
 
 
-
 async def compress_image(file_type: str, image_data: bytes) -> bytes:
     try:
         img = Image.open(BytesIO(image_data))
@@ -162,7 +160,7 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
                 detail='Image size is too small. More than 100x100 is required.'
             )
         if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-            contents = compress_image(file_type, contents)
+            contents = await compress_image(file_type, contents)
 
     else:
         raise HTTPException(
