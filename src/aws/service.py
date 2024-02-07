@@ -154,7 +154,7 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         img = Image.open(BytesIO(contents))
         width, height = img.size
 
-        if width <= 100 or height <= 100:
+        if width < 100 or height < 100:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Image size is too small. More than 100x100 is required.'
