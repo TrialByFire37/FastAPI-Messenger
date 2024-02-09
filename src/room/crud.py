@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import select, insert, delete, and_, update
@@ -6,7 +7,7 @@ from sqlalchemy.exc import NoResultFound, MultipleResultsFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from message.crud import get_messages_in_room
-from models.models import *
+from models.models import room, user, room_user, message
 from room.schemas import RoomReadRequest, RoomBaseInfoForUserRequest, FavoriteRequest, RoomBaseInfoForAllUserRequest
 from user.crud import get_users_in_room
 
@@ -42,44 +43,6 @@ async def delete_room(session: AsyncSession, room_name: str) -> None:
     except Exception as e:
         logger.error(f"Error deleting room: {e}")
         await session.rollback()
-
-
-async def filter_rooms(session: AsyncSession, current_user_id: int, room_name: str, page: int = 1, limit: int = 10) \
-        -> Optional[List[RoomBaseInfoForUserRequest]]:
-    try:
-        query = await session.execute(
-            select(
-                room.c.room_id,
-                room.c.room_name,
-                room_user.c.is_chosen,
-                room_user.c.creation_date
-            )
-            .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id),
-                  isouter=True)
-            .filter(room.c.room_name.ilike(f'%{room_name}%'))
-            .order_by(
-                room_user.c.update_date.desc(),
-                room_user.c.is_chosen.desc()
-            )
-            .limit(limit)
-            .offset((page - 1) * limit)
-        )
-        rooms: List[RoomBaseInfoForUserRequest] = list()
-        rows = query.fetchall()
-        for row in rows:
-            rooms.append(
-                RoomBaseInfoForUserRequest(
-                    room_id=row[0],
-                    room_name=row[1],
-                    is_favorites=row[2] if row[2] is not None else False
-                )
-            )
-        rooms.sort(key=lambda x: x.is_favorites, reverse=True)
-        await session.commit()
-        return rooms
-    except Exception as e:
-        logger.error(f"Error filtering rooms: {e}")
-        return None
 
 
 async def get_room(session: AsyncSession, room_name: str) -> Optional[RoomReadRequest]:
@@ -234,7 +197,7 @@ async def get_user_favorite(session: AsyncSession, current_user_id: int, page: i
         query = await (session.execute(
             select(room, room_user)
             .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id,
-                                  room_user.c.is_chosen == True))
+                                  room_user.c.is_chosen is True))
             .order_by(room_user.c.update_date.desc())
             .limit(limit)
             .offset((page - 1) * limit)
@@ -264,7 +227,7 @@ async def get_user_favorite_like_room_name(session: AsyncSession, room_name: str
         query = await (session.execute(
             select(room, room_user)
             .join(room_user, and_(room.c.room_id == room_user.c.room, room_user.c.user == current_user_id,
-                                  room_user.c.is_chosen == True, room.c.room_name.ilike(f'%{room_name}%')))
+                                  room_user.c.is_chosen is True, room.c.room_name.ilike(f'%{room_name}%')))
             .order_by(room_user.c.update_date.desc())
             .limit(limit)
             .offset((page - 1) * limit)

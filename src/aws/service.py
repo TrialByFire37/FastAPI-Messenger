@@ -215,7 +215,7 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
                     detail='Image file size should not exceed 10 MB. '
                 )
             file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
-        except Exception as e:
+        except Exception:
             print("Compression failed.")
             pass
     else:
