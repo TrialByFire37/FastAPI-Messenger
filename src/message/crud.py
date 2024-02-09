@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aws.service import upload_from_base64
 from message.schemas import MessageRead, MemberRead
-from models.models import *
+from models.models import room, user, message, room_user
 from user.crud import get_user_by_id
 
 logger = logging.getLogger(__name__)

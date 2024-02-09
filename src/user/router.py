@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+
+from fastapi import APIRouter, Depends, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.base_config import fastapi_users
+from auth.schemas import UserRead
 from database import get_async_session
 from message.crud import upload_message_with_file_to_room
-from user.crud import *
-from user.schemas import UserUpdateRequest
+from user.crud import update_user_image, update_user_data
+from user.schemas import UserUpdateRequest, UserBaseReadRequest
 
 router = APIRouter()
 

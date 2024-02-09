@@ -1,14 +1,15 @@
 import logging
-from typing import List
+from typing import List, Optional
 
+from fastapi import UploadFile
 from fastapi_users.password import PasswordHelper
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.schemas import UserRead
-from aws.service import *
-from models.models import *
-from user.schemas import UserReadRequest, UserBaseReadRequest, UserUpdateRequest, UserPersonalReadRequest
+from aws.service import upload, get_url
+from models.models import user, room_user
+from user.schemas import UserReadRequest, UserBaseReadRequest, UserUpdateRequest
 
 logger = logging.getLogger(__name__)
 
@@ -93,12 +94,12 @@ async def update_user_data(
         return None
 
 
-async def upload_test(
-        session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]
-) -> Optional[UserBaseReadRequest]:
-    try:
-        file_to_name = await upload(file)
-        print("File uploaded")
-    except Exception as e:
-        logger.error(f"Error uploading: {e}")
-        return None
+# async def upload_test(
+#         session: AsyncSession, current_user: UserRead, file: Optional[UploadFile]
+# ) -> Optional[UserBaseReadRequest]:
+#     try:
+#         await upload(file)
+#         print("File uploaded")
+#     except Exception as e:
+#         logger.error(f"Error uploading: {e}")
+#         return None
