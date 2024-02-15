@@ -16,3 +16,4 @@ Pillow~=10.0.1
 certifi~=2023.7.22
 pytest~=8.0.0
 httpx~=0.25.0
+asyncpg~=0.28.0

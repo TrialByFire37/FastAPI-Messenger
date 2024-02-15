@@ -27,8 +27,8 @@ class UserImageUploadRequest(BaseModel):
 
 
 class UserUpdateRequest(BaseModel):
-    password: str = None
-    username: str = None
-    last_name: str = None
-    first_name: str = None
-    surname: str = None
+    password: Optional[str] = None
+    username: Optional[str] = None
+    last_name: Optional[str] = None
+    first_name: Optional[str] = None
+    surname: Optional[str] = None
