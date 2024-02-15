@@ -30,6 +30,7 @@ class UserCreate(schemas.BaseUserCreate):
 
 class UserUpdate(schemas.BaseUserUpdate):
     email: Optional[str] = None
+    username: Optional[str] = None
     password: Optional[str] = None
     last_name: Optional[str] = None
     first_name: Optional[str] = None
