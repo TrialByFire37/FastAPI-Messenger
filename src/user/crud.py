@@ -73,22 +73,3 @@ async def update_user_image(
         logger.error(f"Error updating user: {e}")
         await session.rollback()
         return None
-
-
-async def update_user_data(
-        session: AsyncSession, current_user: UserRead, request: UserUpdateRequest
-) -> None:
-    try:
-        await session.execute(
-            update(user)
-            .where(user.c.id == current_user.id)
-            .values(username=request.username,
-                    hashed_password=PasswordHelper().hash(request.password),
-                    last_name=request.last_name,
-                    first_name=request.first_name,
-                    surname=request.surname)
-        )
-        await session.commit()
-    except IntegrityError as e:
-        logger.error(f"Integrity error updating user: {e}")
-        await session.rollback()
