@@ -1,13 +1,6 @@
-from typing import List
-
-import pytest
 from httpx import AsyncClient
-from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from auth.schemas import UserRead
-from tests.conftest import async_session_maker
-from user.crud import get_user_by_id, get_user_by_username, update_user_data, get_users_in_room
-from user.schemas import UserReadRequest, UserUpdateRequest
 
 
 async def test_update_user_image(ac: AsyncClient):
