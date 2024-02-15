@@ -10,8 +10,6 @@ from user.crud import get_user_by_id, get_user_by_username, update_user_data, ge
 from user.schemas import UserReadRequest, UserUpdateRequest
 
 
-
-
 async def test_update_user_image(ac: AsyncClient):
     login_data = {
         "username": "gelo21region",

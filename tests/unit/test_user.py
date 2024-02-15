@@ -126,7 +126,7 @@ async def test_update_user_data_fail(ac: AsyncClient):
     )
     request: UserUpdateRequest = UserUpdateRequest(
         password="string1",
-        username="demon666",
+        username="four123f",
         last_name="popov",
         first_name="gleb",
     )
