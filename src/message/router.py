@@ -51,13 +51,15 @@ async def websocket_endpoint(
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
                 message = message_data["message"]
-                content = message_data["content"]
                 if "type" in message_data and message_data["type"] == "file":
+                    content = message_data["content"]
                     file_type = message_data["fileType"]
-                    media_file_url = await upload_message_with_file_to_room(session, room_name, user_name, content,
+                    media_file_url = await upload_message_with_file_to_room(session,
+                                                                            room_name, user_name,
+                                                                            message, content,
                                                                             file_type)
                     file_data = {
-                        "content": message,
+                        "message": message,
                         "media_file_url": media_file_url,
                         "user": {"username": user_name},
                         "type": "file",
