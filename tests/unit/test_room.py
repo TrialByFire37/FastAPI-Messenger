@@ -25,7 +25,7 @@ async def test_insert_room_func(username, room_name):
 
 async def test_delete_room_func():
     async with async_session_maker() as session:
-        username = 'Gelo123g'
+        username = 'gelo123g'
         room_name = 'Sample Room Delete'
 
         await insert_room(session, username, room_name)
@@ -38,7 +38,7 @@ async def test_delete_room_func():
 
 async def test_get_room():
     async with async_session_maker() as session:
-        username = 'Gelo123g'
+        username = 'gelo123g'
         room_name = 'Sample Room Get'
 
         await insert_room(session, username, room_name)
@@ -51,7 +51,7 @@ async def test_get_room():
 
 async def test_filter_rooms():
     async with async_session_maker() as session:
-        username = 'Gelo123g'
+        username = 'gelo123g'
         room_name_template = 'Sample Room Filter'
         created_rooms = []
 

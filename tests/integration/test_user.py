@@ -1,12 +1,16 @@
+import pytest
 from httpx import AsyncClient
 
 from auth.schemas import UserRead
 
 
-async def test_update_user_image(ac: AsyncClient):
+@pytest.mark.parametrize("username, password", [
+    ("gelo121region", "string1"),
+])
+async def test_update_user_image(username, password, ac: AsyncClient):
     login_data = {
-        "username": "gelo21region",
-        "password": "string1"
+        "username": username,
+        "password": password
     }
     login_response = await ac.post("/api/auth/jwt/login", data=login_data)
     assert login_response.status_code == 200

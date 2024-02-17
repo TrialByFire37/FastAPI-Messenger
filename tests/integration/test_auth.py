@@ -23,7 +23,8 @@ async def test_valid_user_registration(email, username, password, ac: AsyncClien
 
 
 @pytest.mark.parametrize("username, password", [
-    ("gelo21region", "string1")
+    ("gelo121region", "string1"),
+    ("gelo123g", "string1"),
 ])
 async def test_valid_user_login(username, password, ac: AsyncClient):
     user_data = {
@@ -32,30 +33,3 @@ async def test_valid_user_login(username, password, ac: AsyncClient):
     }
     response = await ac.post("/api/auth/jwt/login", data=user_data)
     assert response.status_code == 200
-
-
-# #  Logout
-# @pytest.mark.parametrize("username, password", [
-#     ("gelo21region", "string1")
-# ])
-# async def test_valid_user_logout(username, password, ac: AsyncClient):
-#     user_data = {
-#         "username": username,
-#         "password": password
-#     }
-#     login_response = await ac.post("/api/auth/jwt/login", data=user_data)
-#     assert login_response.status_code == 200
-#     assert "access_token" in login_response.json()
-#     assert "token_type" in login_response.json()
-#
-#     token = login_response.json()['access_token']
-#
-#     headers = {
-#         "Accept": "application/json",
-#         "Authorization": "Bearer " + token
-#     }
-#     response = await ac.post(
-#         "/api/auth/jwt/logout",
-#         headers=headers
-#     )
-#     assert response.status_code == 200
