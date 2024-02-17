@@ -3,7 +3,7 @@ from typing import List
 import pytest
 from sqlalchemy.exc import NoResultFound
 
-from tests.conftest import async_session_maker
+from conftest import async_session_maker
 from user.crud import get_user_by_id, get_user_by_username, get_users_in_room
 from user.schemas import UserReadRequest
 
