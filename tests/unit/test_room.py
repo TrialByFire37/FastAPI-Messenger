@@ -67,6 +67,8 @@ async def test_delete_room(username, room_name):
         assert current_room is None
 
 
+# todo: проверить, всё ли здесь ок с обработкой NoResultFound в crud (там добавили ещё обработку этого
+# исключения отдельно, а нужен именно оно здесь по логике
 @pytest.mark.parametrize("username, room_name", [
     ("gelo123g", "Sample Room Delete Non-Existing"),
 ])
@@ -140,6 +142,8 @@ async def test_add_user_to_room(username, room_name):
         assert any(current_user.username == username for current_user in current_room.members)
 
 
+# todo: проверить, всё ли здесь ок с обработкой NoResultFound в crud (там добавили ещё обработку этого
+# исключения отдельно, а нужен именно оно здесь по логике
 @pytest.mark.parametrize("username, room_name", [
     ("gelo123g", "Sample Room Add User Nowhere"),
 ])
@@ -315,6 +319,8 @@ async def test_alter_favorite(username, room_name, is_chosen):
         assert any(favorite.room_name == room_name and favorite.is_favorites == is_chosen for favorite in favorites)
 
 
+# todo: NoResultFound в crud (в отличие от других функций, здесь я ничего не менял в круде - там уже написана
+# другая обработка, хз как тут быть
 @pytest.mark.parametrize("username, room_name, is_chosen", [
     ("gelo123g", "Alter Favorite Nonexistent Room", True),
 ])

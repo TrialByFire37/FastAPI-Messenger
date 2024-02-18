@@ -5,6 +5,7 @@ import pytest
 from aws.service import compress_image, compress_video
 
 
+# todo: с картинкой из ресурсов не обрабатывает нормально - проблема в KeyError от PIL
 @pytest.mark.parametrize("file_type, image_path", [
     ("image/jpg", "resources/1653975016_28.jpg"),
 ])
