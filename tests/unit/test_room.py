@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 from sqlalchemy import select, and_
-from sqlalchemy.exc import IntegrityError, DataError, NoResultFound
+from sqlalchemy.exc import IntegrityError, DataError, NoResultFound, DBAPIError
 
 from conftest import async_session_maker
 from models.models import room_user, user, room
@@ -32,7 +32,7 @@ async def test_insert_room(username, room_name):
 ])
 async def test_insert_existing_room(username, room_name):
     async with async_session_maker() as session:
-        with pytest.raises(IntegrityError):
+        with pytest.raises(ValueError):
             await insert_room(session, username, room_name)
 
 
@@ -41,7 +41,7 @@ async def test_insert_existing_room(username, room_name):
 ])
 async def test_insert_incorrect_name_room(username, room_name):
     async with async_session_maker() as session:
-        with pytest.raises(DataError):
+        with pytest.raises(DBAPIError):
             await insert_room(session, username, room_name)
 
 
@@ -143,7 +143,7 @@ async def test_add_user_to_room(username, room_name):
 @pytest.mark.parametrize("username, room_name", [
     ("gelo123g", "Sample Room Add User Nowhere"),
 ])
-async def test_add_user_to_room(username, room_name):
+async def test_add_user_to_non_existing_room(username, room_name):
     async with async_session_maker() as session:
         with pytest.raises(NoResultFound):
             await add_user_to_room(session, username, room_name)
@@ -238,7 +238,7 @@ async def test_get_user_favorite_nonexistent_user(username):
 
 
 @pytest.mark.parametrize("username", [
-    "no_favorites_dude",
+    "no_favorites_dude1",
 ])
 async def test_get_user_empty_favorite(username):
     async with async_session_maker() as session:

@@ -8,7 +8,7 @@ from httpx import AsyncClient
     ("popov.gleb.02@mail.ru", "gelo121region", "string1"),
     ("popov.gleb@mail.ru", "gelo123g", "string1"),
     ("popov@mail.ru", "four123f", "string1"),
-    ("nofavdude@mail.ru", "no_favorites_dude", "stringi1"),
+    ("nofavdude@mail.ru", "no_favorites_dude1", "stringi1"),
 ])
 async def test_valid_user_registration(email, username, password, ac: AsyncClient):
     user_data = {

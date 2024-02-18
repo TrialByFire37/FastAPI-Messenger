@@ -6,7 +6,7 @@ from aws.service import compress_image, compress_video
 
 
 @pytest.mark.parametrize("file_type, image_path", [
-    ("jpg", "resources/1653975016_28.jpg"),
+    ("image/jpg", "resources/1653975016_28.jpg"),
 ])
 async def test_compress_image(file_type, image_path):
     with open(image_path, "rb") as f:

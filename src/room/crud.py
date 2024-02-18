@@ -40,6 +40,9 @@ async def delete_room(session: AsyncSession, room_name: str) -> None:
         await session.execute(delete(room_user).filter_by(room=room_id))
         await session.execute(delete(message).filter_by(room=room_id))
         await session.commit()
+    except NoResultFound as nr:
+        logger.error(nr)
+        raise
     except Exception as e:
         logger.error(f"Error deleting room: {e}")
         await session.rollback()
@@ -119,6 +122,9 @@ async def add_user_to_room(session: AsyncSession, username: str, room_name: str)
             return True
         else:
             return False
+    except NoResultFound as nr:
+        logger.error(nr)
+        raise
     except Exception as e:
         logger.error(f"Error adding user to room: {e}")
         await session.rollback()
