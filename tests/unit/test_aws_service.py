@@ -5,9 +5,8 @@ import pytest
 from aws.service import compress_image, compress_video
 
 
-# todo: с картинкой из ресурсов не обрабатывает нормально - проблема в KeyError от PIL
 @pytest.mark.parametrize("file_type, image_path", [
-    ("image/jpg", "resources/1653975016_28.jpg"),
+    ("image/jpeg", "/Users/popovgleb/PycharmProjects/P2P-Messenger/tests/resources/test.jpeg"),
 ])
 async def test_compress_image(file_type, image_path):
     with open(image_path, "rb") as f:
@@ -23,14 +22,13 @@ async def test_compress_image(file_type, image_path):
     assert height <= 1080
 
 
-# todo: определиться с тем, как закидывать для тестов видеофайлы (очевидно, что не в гит грузить)
-# @pytest.mark.parametrize("file_type, video_path, resize_flag", [
-#     ("mp4", "path_to_large_video", True),
-# ])
-# async def test_compress_video_valid_data(file_type, video_path, resize_flag):
-#     with open(video_path, "rb") as f:
-#         video_data = f.read()
-#
-#     compressed_video_data = await compress_video(video_data, file_type, resize_flag)
-#
-#     assert len(compressed_video_data) < len(video_data)
+@pytest.mark.parametrize("file_type, video_path, resize_flag", [
+    ("mp4", "/Users/popovgleb/PycharmProjects/P2P-Messenger/tests/resources/169.mp4", True),
+])
+async def test_compress_video_valid_data(file_type, video_path, resize_flag):
+    with open(video_path, "rb") as f:
+        video_data = f.read()
+
+    compressed_video_data = await compress_video(video_data, file_type, resize_flag)
+
+    assert compressed_video_data is not None

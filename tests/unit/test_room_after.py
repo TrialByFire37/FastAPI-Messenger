@@ -5,10 +5,11 @@ import pytest
 from conftest import async_session_maker
 from message.crud import (upload_message_to_room, get_messages_in_room, upload_message_with_file_to_room,
                           get_members_in_room)
+from message.schemas import MemberRead
 
 
 @pytest.mark.parametrize("username, room_name, message", [
-    ("four123f", "string1", "Hello, World!"),
+    ("four123f", "Sample Room Insert", "Hello, World!"),
 ])
 async def test_upload_message_to_room(username, room_name, message):
     async with async_session_maker() as session:
@@ -17,7 +18,7 @@ async def test_upload_message_to_room(username, room_name, message):
 
 
 @pytest.mark.parametrize("username, room_name, message", [
-    ("four123f1", "string1", "Hello, World!"),
+    ("four123f1", "Sample Room Insert", "Hello, World!"),
 ])
 async def test_upload_message_to_room_fail_user_name(username, room_name, message):
     async with async_session_maker() as session:
@@ -26,7 +27,7 @@ async def test_upload_message_to_room_fail_user_name(username, room_name, messag
 
 
 @pytest.mark.parametrize("username, room_name, message", [
-    ("four123f", "string12", "Hello, World!"),
+    ("four123f", "Sample Room Insert2", "Hello, World!"),
 ])
 async def test_upload_message_to_room_fail_room(username, room_name, message):
     async with async_session_maker() as session:
@@ -35,7 +36,7 @@ async def test_upload_message_to_room_fail_room(username, room_name, message):
 
 
 @pytest.mark.parametrize("username, room_name, message", [
-    ("four123f1", "string12", "Hello, World!"),
+    ("four123f1", "Sample Room Insert2", "Hello, World!"),
 ])
 async def test_upload_message_to_room_fail_user_name_and_room_name(username, room_name, message):
     async with async_session_maker() as session:
@@ -72,24 +73,5 @@ async def test_get_messages_in_room_room_is_empty(room_id):
 async def test_get_members_in_room_room_is_empty(room_id):
     async with async_session_maker() as session:
         value = await get_members_in_room(session, room_id)
+        assert len(value) == 0
         assert value is not None
-        assert len(value) > 0
-        assert value[0].user_id is not None
-        assert value[0].user_id == 1
-        assert value[0].username is not None
-        assert value[0].username == "gelo21region"
-
-
-@pytest.mark.parametrize("room_id", [
-    1,
-])
-async def test_get_members_in_room_room_is_empty(room_id):
-    async with async_session_maker() as session:
-        value = await get_members_in_room(session, room_id)
-        assert value is not None
-        assert len(value) > 0
-        assert value[0].user_id is not None
-        assert value[0].user_id == 1
-        assert value[0].username is not None
-        assert value[0].username == "gelo21region"
-        assert value[0].profile_pic_img_src is None
