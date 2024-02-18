@@ -26,7 +26,8 @@ import certifi
 
 
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -> FileRead:
-    file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
+    #     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
+    file_name = f'{uuid4()}.mp4'
     await s3_upload(contents=video_data, key=file_name)
 
     current_video_url_in_backblaze = await get_url(file_name)

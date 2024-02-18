@@ -76,11 +76,13 @@ async def get_members_in_room(session: AsyncSession, room_id: int) -> List[Membe
     rows = result.fetchall()
     members: List[MemberRead] = list()
     for row in rows:
-        members.append(MemberRead(
-            user_id=row[0],
-            username=row[6],
-            profile_pic_img_src=row[9],
-            date_created=row[10]
-        ))
+        if len(row) >= 11:
+            member = MemberRead(
+                user_id=row[0],
+                username=row[6],
+                profile_pic_img_src=row[9],
+                date_created=row[10]
+            )
+            members.append(member)
     await session.commit()
     return members
