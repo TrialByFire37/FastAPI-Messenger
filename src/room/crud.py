@@ -251,7 +251,7 @@ async def get_user_favorite_like_room_name(session: AsyncSession, room_name: str
             )
         await session.commit()
         return rooms
-    except Exception as e:
+    except NoResultFound as e:
         logger.error(f"Error getting rooms: {e}")
         return None
 
