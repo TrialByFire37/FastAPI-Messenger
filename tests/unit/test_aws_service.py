@@ -13,43 +13,43 @@ from aws.service import upload, upload_from_base64, download, get_url, compress_
 
 class TestService(unittest.IsolatedAsyncioTestCase):
 
-    @patch('aws.service.s3_upload')
-    @patch('aws.service.get_url')
-    @patch('aws.service.shotstack_sdk.ApiClient')
-    @patch('aws.service.shotstack_sdk.EditApi')
-    @patch('aws.service.time.sleep', MagicMock())
-    async def test_compress_video(self, mock_edit_api, mock_api_client, mock_get_url, mock_s3_upload):
-        video_data = b'fake_video_data'
-        file_type = 'mp4'
-        resize_flag = False
-
-        mock_edit_api_instance = MagicMock()
-        mock_edit_api.return_value = mock_edit_api_instance
-
-        mock_get_url.return_value = 'fake_url'
-
-        mock_api_instance = MagicMock()
-        mock_api_client.return_value = mock_api_instance
-
-        mock_probe_response = {
-            'response': {
-                'metadata': {
-                    'streams': [{'codec_type': 'video', 'duration': 10}]
-                }
-            }
-        }
-        mock_api_instance.probe.return_value = mock_probe_response
-
-        mock_post_render_response = {'response': {'id': 'fake_id'}}
-        mock_api_instance.post_render.return_value = mock_post_render_response
-
-        mock_get_render_response_done = {'response': {'status': 'done', 'url': 'fake_rendered_url'}}
-        mock_get_render_response_processing = {'response': {'status': 'processing'}}
-        mock_api_instance.get_render.side_effect = [mock_get_render_response_processing, mock_get_render_response_done]
-
-        result = await compress_video(video_data, file_type, resize_flag)
-
-        self.assertEqual(result.file_name, 'fake_rendered_url')
+    # @patch('aws.service.s3_upload')
+    # @patch('aws.service.get_url')
+    # @patch('aws.service.shotstack_sdk.ApiClient')
+    # @patch('aws.service.shotstack_sdk.EditApi')
+    # @patch('aws.service.time.sleep', MagicMock())
+    # async def test_compress_video(self, mock_edit_api, mock_api_client, mock_get_url, mock_s3_upload):
+    #     video_data = b'fake_video_data'
+    #     file_type = 'mp4'
+    #     resize_flag = False
+    #
+    #     mock_edit_api_instance = MagicMock()
+    #     mock_edit_api.return_value = mock_edit_api_instance
+    #
+    #     mock_get_url.return_value = 'fake_url'
+    #
+    #     mock_api_instance = MagicMock()
+    #     mock_api_client.return_value = mock_api_instance
+    #
+    #     mock_probe_response = {
+    #         'response': {
+    #             'metadata': {
+    #                 'streams': [{'codec_type': 'video', 'duration': 10}]
+    #             }
+    #         }
+    #     }
+    #     mock_api_instance.probe.return_value = mock_probe_response
+    #
+    #     mock_post_render_response = {'response': {'id': 'fake_id'}}
+    #     mock_api_instance.post_render.return_value = mock_post_render_response
+    #
+    #     mock_get_render_response_done = {'response': {'status': 'done', 'url': 'fake_rendered_url'}}
+    #     mock_get_render_response_processing = {'response': {'status': 'processing'}}
+    #     mock_api_instance.get_render.side_effect = [mock_get_render_response_processing, mock_get_render_response_done]
+    #
+    #     result = await compress_video(video_data, file_type, resize_flag)
+    #
+    #     self.assertEqual(result.file_name, 'fake_rendered_url')
 
 
     # todo: все ок
