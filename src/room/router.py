@@ -18,14 +18,17 @@ logger = logging.getLogger(__name__)
 @router.post("/room")
 @limiter.limit("1000/minute")
 async def create_room(request: Request,
-                      createrequest: RoomCreateRequest,
+                      create_request: RoomCreateRequest,
                       current_user: UserRead = Depends(fastapi_users.current_user()),
                       session: AsyncSession = Depends(get_async_session)):
     """
     Create a room
     """
     try:
-        res = await insert_room(session, current_user.username, createrequest.room_name)
+        if not create_request.room_name.strip():
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Room name is empty")
+
+        res = await insert_room(session, current_user.username, create_request.room_name)
         return res
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
