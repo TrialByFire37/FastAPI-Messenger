@@ -54,7 +54,7 @@ async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[Mess
         .join(room, room.c.room_id == message.c.room)
         .where(room.c.room_id == room_id)
     )
-    rows = result.fetchall()
+    rows = await result.fetchall()
     messages: List[MessageRead] = list()
     for row in rows:
         user_read_request = await get_user_by_id(session, row[4])
@@ -73,7 +73,7 @@ async def get_members_in_room(session: AsyncSession, room_id: int) -> List[Membe
         .join(user, user.c.id == room_user.c.user)
         .where(room.c.room_id == room_id)
     )
-    rows = result.fetchall()
+    rows = await result.fetchall()
     members: List[MemberRead] = list()
     for row in rows:
         if len(row) >= 11:
