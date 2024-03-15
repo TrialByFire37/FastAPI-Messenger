@@ -111,13 +111,9 @@ async def add_user_to_room(session: AsyncSession, username: str, room_name: str)
     try:
         user_instance = (await session.execute(select(user).filter_by(username=username))).scalar_one()
         room_instance = (await session.execute(select(room).filter_by(room_name=room_name))).scalar_one()
-        entity_room_user = (await session.execute(
-            select(room_user)
-            .where(and_(room_user.c.user == user_instance, room_user.c.room == room_instance))
-        )).scalar_one_or_none()
+        entity_room_user = (await session.execute(select(room_user).where(and_(room_user.c.user == user_instance, room_user.c.room == room_instance)))).scalar_one_or_none()
         if entity_room_user is None:
-            association = room_user.insert().values(user=user_instance, room=room_instance, is_active=True)
-            await session.execute(association)
+            insert_into_room_user = (await session.execute(insert(room_user).values(user=user_instance, room=room_instance, is_active=True)))
             await session.commit()
             return True
         else:
@@ -251,7 +247,7 @@ async def get_user_favorite_like_room_name(session: AsyncSession, room_name: str
             )
         await session.commit()
         return rooms
-    except Exception as e:
+    except NoResultFound as e:
         logger.error(f"Error getting rooms: {e}")
         return None
 
@@ -259,10 +255,7 @@ async def get_user_favorite_like_room_name(session: AsyncSession, room_name: str
 async def alter_favorite(session: AsyncSession, current_user_id: int, request: FavoriteRequest) -> None:
     try:
         room_instance = (await session.execute(select(room).filter_by(room_name=request.room_name))).scalar_one()
-        entity_room_user = (await session.execute(
-            select(room_user)
-            .where(and_(room_user.c.user == current_user_id, room_user.c.room == room_instance))
-        )).scalar_one_or_none()
+        entity_room_user = (await session.execute(select(room_user).where(and_(room_user.c.user == current_user_id, room_user.c.room == room_instance)))).scalar_one_or_none()
         if entity_room_user is not None:
             await (session.execute(
                 update(room_user)
@@ -280,9 +273,9 @@ async def alter_favorite(session: AsyncSession, current_user_id: int, request: F
     except NoResultFound as e:
         logger.error(f"Error: {e}. The requested data does not exist in the database.")
         await session.rollback()
-    except MultipleResultsFound as e:
-        logger.error(f"Error: {e}. Multiple results found for the query.")
-        await session.rollback()
+    # except MultipleResultsFound as e:
+    #     logger.error(f"Error: {e}. Multiple results found for the query.")
+    #     await session.rollback()
     except Exception as e:
         logger.error(f"Error altering room: {e}")
         await session.rollback()

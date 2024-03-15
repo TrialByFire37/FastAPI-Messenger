@@ -140,14 +140,14 @@ async def upload_from_base64(base64_data: str, file_type: str) -> Optional[FileR
         resize_flag = width >= 1920 or height >= 1080
         size_flag = size >= 8 * MB
 
-        if resize_flag or size_flag:
-            return await compress_video(contents, file_type, resize_flag)
-
         if size > max_size:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_message
             )
+
+        if resize_flag or size_flag:
+            return await compress_video(contents, file_type, resize_flag)
 
     elif file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
         max_size = 10 * MB
@@ -197,31 +197,26 @@ async def upload(file: Optional[UploadFile] = None) -> Optional[FileRead]:
     file_name = ''
 
     if file_type in SUPPORTED_FILE_TYPES_FORM_IMAGE:
-        try:
-            img = Image.open(BytesIO(contents))
-            width, height = img.size
+        img = Image.open(BytesIO(contents))
+        width, height = img.size
 
-            if width <= 10 or height <= 10:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail='Image size is too small to be previewed. More than 10x10 is required.'
-                )
-            if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
-                contents = await compress_image(file_type, contents)
-            if size > 10 * MB:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail='Image file size should not exceed 10 MB. '
-                )
-            file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
-        except Exception:
-            print("Compression failed.")
-            pass
+        if width <= 10 or height <= 10:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Image size is too small to be previewed. More than 10x10 is required.'
+            )
+        if (width > 2048 or height > 1080) or (1 * MB <= size <= 10 * MB):
+            contents = await compress_image(file_type, contents)
+        if size > 10 * MB:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Image file size should not exceed 10 MB. '
+            )
+        file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES_FORM_APPLICATION[file_type]}'
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Unsupported file type: {file_type}. '
-                   f'Supported types are {SUPPORTED_FILE_TYPES_FORM_AUDIO + SUPPORTED_FILE_TYPES_FORM_VIDEO + SUPPORTED_FILE_TYPES_FORM_IMAGE}'
+            detail=f'Unsupported file type: {file_type}.'
         )
 
     await s3_upload(contents=contents, key=file_name)
