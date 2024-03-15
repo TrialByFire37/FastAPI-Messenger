@@ -152,14 +152,12 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
     @patch('aws.service.s3_upload')
-    @patch('aws.service.compress_image')
     @patch('aws.service.compress_video')
     @patch('aws.service.av.open')
     @patch('aws.service.Image.open')
     @patch('aws.service.base64.b64decode')
     async def test_upload_from_base64_video_size_too_big(self, mock_decode, mock_image_open, mock_av_open,
-                                                         mock_compress_video,
-                                                         mock_compress_image, mock_s3_upload):
+                                                         mock_compress_video, mock_s3_upload):
         max_size = 50 * MB
         base64_data = os.urandom(max_size + 1)
         mock_decode.return_value = base64_data
@@ -167,7 +165,7 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         mock_av_open.return_value.streams.video[0].width = 900
         mock_av_open.return_value.streams.video[0].height = 900
         mock_compress_video.return_value = MagicMock()
-        mock_compress_image.return_value = MagicMock()
+        #mock_compress_image.return_value = MagicMock()
         mock_s3_upload.return_value = MagicMock()
         with self.assertRaises(HTTPException) as context:
             await upload_from_base64(str(base64_data), 'video/mp4')

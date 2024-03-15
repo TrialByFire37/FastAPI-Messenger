@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import UploadFile
 from fastapi_users.password import PasswordHelper
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.schemas import UserRead
@@ -16,25 +16,33 @@ logger = logging.getLogger(__name__)
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> UserReadRequest:
-    user_instance = (await session.execute(select(user).filter_by(id=user_id))).one()
-    await session.commit()
-    return UserReadRequest(
-        user_id=user_instance.id,
-        username=user_instance.username,
-        email=user_instance.email,
-        profile_pic_img_src=user_instance.image_url
-    )
+    try:
+        user_instance = (await session.execute(select(user).filter_by(id=user_id))).one()
+        await session.commit()
+        return UserReadRequest(
+            user_id=user_instance.id,
+            username=user_instance.username,
+            email=user_instance.email,
+            profile_pic_img_src=user_instance.image_url
+        )
+    except NoResultFound as e:
+        logger.error(f"Error getting user by ID: {e}")
+        return None
 
 
 async def get_user_by_username(session: AsyncSession, username: str) -> UserReadRequest:
-    user_instance = (await session.execute(select(user).filter_by(username=username))).one()
-    await session.commit()
-    return UserReadRequest(
-        user_id=user_instance.id,
-        username=user_instance.username,
-        email=user_instance.email,
-        profile_pic_img_src=user_instance.image_url
-    )
+    try:
+        user_instance = (await session.execute(select(user).filter_by(username=username))).one()
+        await session.commit()
+        return UserReadRequest(
+            user_id=user_instance.user_id,
+            username=user_instance.username,
+            email=user_instance.email,
+            profile_pic_img_src=user_instance.image_url
+        )
+    except NoResultFound as e:
+        logger.error(f"Error getting user by name: {e}")
+        return None
 
 
 async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserReadRequest]:
@@ -43,7 +51,7 @@ async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserRea
         .join(room_user, user.c.id == room_user.c.user)
         .where(room_user.c.room == room_id)
     )
-    rows = result.fetchall()
+    rows = await result.fetchall()
     users: List[UserReadRequest] = list()
     for row in rows:
         users.append(UserReadRequest(

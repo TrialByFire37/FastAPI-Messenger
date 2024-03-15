@@ -1,20 +1,20 @@
 import asyncio
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
 
-from database import get_async_session
+from config import DB_USER_TEST, DB_PASS_TEST, DB_HOST_TEST, DB_PORT_TEST, DB_NAME_TEST
+from database import get_async_session, async_session_maker
 from src.app import app
-from src.config import (DB_HOST_TEST, DB_NAME_TEST, DB_PASS_TEST, DB_PORT_TEST,
-                        DB_USER_TEST)
 from src.database import metadata
 
-# DATABASE
+
 DATABASE_URL_TEST = f"postgresql+asyncpg://{DB_USER_TEST}:{DB_PASS_TEST}@{DB_HOST_TEST}:{DB_PORT_TEST}/{DB_NAME_TEST}"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
@@ -30,13 +30,19 @@ async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
 app.dependency_overrides[get_async_session] = override_get_async_session
 
 
-@pytest.fixture(autouse=True, scope='session')
+@pytest.fixture(autouse=False, scope='session')
 async def prepare_database():
     async with engine_test.begin() as conn:
         await conn.run_sync(metadata.create_all)
     yield
     async with engine_test.begin() as conn:
         await conn.run_sync(metadata.drop_all)
+
+
+@pytest.fixture()
+async def mock_db_session():
+    mock_session = AsyncMock()
+    return mock_session
 
 
 # SETUP
