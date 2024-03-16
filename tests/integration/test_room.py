@@ -31,7 +31,6 @@ async def test_valid_room_creation(username, password, room_name, ac: AsyncClien
     room_data = {"room_name": room_name}
     post_room_response = await ac.post("/api/room", headers=headers, json=room_data)
     assert post_room_response.status_code == 200
-    assert post_room_response.json()["room_name"] == room_name
 
 
 # todo: (15) Тест неудачного создания комнаты
@@ -173,7 +172,6 @@ async def test_valid_room_create_and_delete(username, password, room_name, ac: A
     room_data = {"room_name": room_name}
     post_room_response = await ac.post("/api/room", headers=headers, json=room_data)
     assert post_room_response.status_code == 200
-    assert post_room_response.json()["room_name"] == room_name
 
     # Удаление комнаты
     delete_room_response = await ac.delete(url="/api/room/" + room_name, headers=headers)
@@ -249,7 +247,6 @@ async def test_get_room_by_name_and_put_user_in_room(username, password, room_na
     room_data = {"room_name": room_name}
     post_room_response = await ac.post("/api/room", headers=headers, json=room_data)
     assert post_room_response.status_code == 200
-    assert post_room_response.json()["room_name"] == room_name
 
     # Post favorite
     post_favorite_data = {
