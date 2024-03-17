@@ -42,17 +42,14 @@ async def test_update_user_image(username, password, ac: AsyncClient):
         is_verified=get_me_response_json['is_verified']
     )
 
-    # Сначала проверим, что у пользователя нет изображения
     assert current_user.image_url is None
 
-    # Теперь сделаем запрос для обновления изображения
     with open("tests/resources/test.jpeg", "rb") as image_file:
         files = {"file": ("test_image.jpg", image_file, "image/jpg")}
         response = await ac.post("/api/user/profile_picture", files=files, headers=headers)
 
     assert response.status_code == 200, "Failed to update user image"
 
-    # Проверим, что изображение успешно обновлено
     get_me_response = await ac.get("/api/user/me", headers=headers)
     assert get_me_response.status_code == 200, "Failed to get me"
     get_me_response_json = get_me_response.json()

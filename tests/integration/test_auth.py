@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 
 
-# Register
 @pytest.mark.parametrize("email, username, password", [
     ("popov.gleb.01@mail.ru", "gelo21region", "string1"),
     ("popov.gleb.02@mail.ru", "gelo121region", "string1"),
@@ -231,7 +230,6 @@ async def test_user_get_me_and_update_me(username, password, ac: AsyncClient):
     headers = {
         "Authorization": "Bearer " + token
     }
-    #  Get
     response = await ac.get("/api/user/me", headers=headers)
     assert response.status_code == 200
 
@@ -250,7 +248,6 @@ async def test_user_get_me_and_update_me(username, password, ac: AsyncClient):
     response = await ac.patch("/api/user/me", headers=headers, json=user_patch_data)
     assert response.status_code == 200
 
-    #  Get
     response = await ac.get("/api/user/me", headers=headers)
     assert response.status_code == 200
     assert response.json() != get_me_obj

@@ -10,7 +10,6 @@ from httpx import AsyncClient
     ("gelo123g", "string1", "bbbb"),
 ])
 async def test_valid_room_creation(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -22,7 +21,6 @@ async def test_valid_room_creation(username, password, room_name, ac: AsyncClien
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -39,7 +37,6 @@ async def test_valid_room_creation(username, password, room_name, ac: AsyncClien
     ("gelo123g", "string1", " "),
 ])
 async def test_room_create_validation_error(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -51,7 +48,6 @@ async def test_room_create_validation_error(username, password, room_name, ac: A
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -68,7 +64,6 @@ async def test_room_create_validation_error(username, password, room_name, ac: A
     ("gelo121region", "string1", "bbbb"),
 ])
 async def test_valid_room_add(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -80,7 +75,6 @@ async def test_valid_room_add(username, password, room_name, ac: AsyncClient):
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -96,7 +90,6 @@ async def test_valid_room_add(username, password, room_name, ac: AsyncClient):
     ("gelo121region", "string1", "3333"),
 ])
 async def test_valid_room_delete(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -108,7 +101,6 @@ async def test_valid_room_delete(username, password, room_name, ac: AsyncClient)
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -151,7 +143,6 @@ async def test_valid_room_delete(username, password, room_name, ac: AsyncClient)
     ("gelo121region", "string1", "room_1"),
 ])
 async def test_valid_room_create_and_delete(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -163,7 +154,6 @@ async def test_valid_room_create_and_delete(username, password, room_name, ac: A
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -173,7 +163,6 @@ async def test_valid_room_create_and_delete(username, password, room_name, ac: A
     post_room_response = await ac.post("/api/room", headers=headers, json=room_data)
     assert post_room_response.status_code == 200
 
-    # Удаление комнаты
     delete_room_response = await ac.delete(url="/api/room/" + room_name, headers=headers)
     assert delete_room_response.status_code == 200
 
@@ -184,7 +173,6 @@ async def test_valid_room_create_and_delete(username, password, room_name, ac: A
 ])
 async def test_auth_by_login_and_password_and_get_favorites_and_post_favorite(username, password, room_name,
                                                                               ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -196,7 +184,6 @@ async def test_auth_by_login_and_password_and_get_favorites_and_post_favorite(us
 
     token = login_response.json()['access_token']
 
-    # Get favorites
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -207,7 +194,6 @@ async def test_auth_by_login_and_password_and_get_favorites_and_post_favorite(us
 
     list_favorites = get_favorites_response.json()
 
-    # Post favorite
     post_favorite_data = {
         "room_name": room_name,
         "is_chosen": True
@@ -215,7 +201,6 @@ async def test_auth_by_login_and_password_and_get_favorites_and_post_favorite(us
     post_favorite_response = await ac.post("/api/favorite", headers=headers, json=post_favorite_data)
     assert post_favorite_response.status_code == 200
 
-    # Get favorites
     get_favorites_response = await ac.get("/api/favorites?page=1&limit=10", headers=headers)
     assert get_favorites_response.status_code == 200
     assert len(get_favorites_response.json()) == len(list_favorites) + 1
@@ -226,7 +211,6 @@ async def test_auth_by_login_and_password_and_get_favorites_and_post_favorite(us
     ("gelo123g", "string1", "pppp"),
 ])
 async def test_get_room_by_name_and_put_user_in_room(username, password, room_name, ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -238,7 +222,6 @@ async def test_get_room_by_name_and_put_user_in_room(username, password, room_na
 
     token = login_response.json()['access_token']
 
-    # Создание комнаты
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -248,7 +231,6 @@ async def test_get_room_by_name_and_put_user_in_room(username, password, room_na
     post_room_response = await ac.post("/api/room", headers=headers, json=room_data)
     assert post_room_response.status_code == 200
 
-    # Post favorite
     post_favorite_data = {
         "room_name": room_name,
         "is_chosen": True
@@ -271,7 +253,6 @@ async def test_get_room_by_name_and_put_user_in_room(username, password, room_na
 ])
 async def test_get_favorites_and_delete_favorite(username, password, room_name,
                                                  ac: AsyncClient):
-    # Login
     login_data = {
         "username": username,
         "password": password
@@ -283,7 +264,6 @@ async def test_get_favorites_and_delete_favorite(username, password, room_name,
 
     token = login_response.json()['access_token']
 
-    # Get favorites
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -294,7 +274,6 @@ async def test_get_favorites_and_delete_favorite(username, password, room_name,
 
     list_favorites = get_favorites_response.json()
 
-    # Post favorite
     post_favorite_data = {
         "room_name": room_name,
         "is_chosen": False
@@ -302,7 +281,6 @@ async def test_get_favorites_and_delete_favorite(username, password, room_name,
     post_favorite_response = await ac.post("/api/favorite", headers=headers, json=post_favorite_data)
     assert post_favorite_response.status_code == 200
 
-    # Get favorites
     get_favorites_response = await ac.get("/api/favorites?page=1&limit=10", headers=headers)
     assert get_favorites_response.status_code == 200
     assert len(get_favorites_response.json()) == len(list_favorites) - 1

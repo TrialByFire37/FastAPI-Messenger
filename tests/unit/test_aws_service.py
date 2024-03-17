@@ -1,6 +1,7 @@
 import os
-import unittest
+import pytest
 from http.client import HTTPException
+import unittest
 from unittest.mock import AsyncMock, Mock, ANY, MagicMock
 from unittest.mock import patch
 
@@ -8,11 +9,12 @@ from fastapi import HTTPException, status
 
 from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_AUDIO, SUPPORTED_FILE_TYPES_FORM_VIDEO, \
     SUPPORTED_FILE_TYPES_FORM_IMAGE
-from aws.service import upload, upload_from_base64, download, get_url, compress_image, compress_video
+from aws.service import upload, upload_from_base64, download, get_url, compress_image
 
 
 class TestService(unittest.IsolatedAsyncioTestCase):
 
+    # todo: (1) Тест сжатия видео (Failed)
     # @patch('aws.service.s3_upload')
     # @patch('aws.service.get_url')
     # @patch('aws.service.shotstack_sdk.ApiClient')
@@ -52,7 +54,7 @@ class TestService(unittest.IsolatedAsyncioTestCase):
     #     self.assertEqual(result.file_name, 'fake_rendered_url')
 
 
-    # todo: все ок
+    # todo: (2) Тест неудачного сжатия изображения
     async def test_compress_image_invalid(self):
         invalid_image_data = b""
 
@@ -60,6 +62,7 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             await compress_image("jpg", invalid_image_data)
 
 
+    # todo: (3) Тест загрузки base64-файла - неизветсный тип файла
     @patch('aws.service.s3_upload', new_callable=AsyncMock)
     @patch('aws.service.compress_image', new_callable=AsyncMock)
     @patch('aws.service.Image.open', new_callable=MagicMock)
@@ -82,6 +85,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
                          f'{SUPPORTED_FILE_TYPES_FORM_VIDEO}'
                          f'{SUPPORTED_FILE_TYPES_FORM_IMAGE}')
 
+
+    # todo: (4) Тест загрузки base64-файла - изображение
     @patch('aws.service.s3_upload', new_callable=AsyncMock)
     @patch('aws.service.compress_image', new_callable=AsyncMock)
     @patch('aws.service.Image.open', new_callable=MagicMock)
@@ -97,6 +102,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
+
+    # todo: (5) Тест загрузки base64-файла - ширина/высота слишком мала
     @patch('aws.service.s3_upload', new_callable=AsyncMock)
     @patch('aws.service.compress_image', new_callable=AsyncMock)
     @patch('aws.service.Image.open', new_callable=MagicMock)
@@ -117,6 +124,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
                          'Image size is too small. More than 100x100 is required.'
                          )
 
+
+    # todo: (6) Тест загрузки base64-файла - сжатие видео
     @patch('aws.service.s3_upload')
     @patch('aws.service.compress_video')
     @patch('aws.service.av.open')
@@ -134,6 +143,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result is not None
 
+
+    # todo: (7) Тест загрузки base64-файла - видео
     @patch('aws.service.s3_upload')
     @patch('aws.service.compress_video')
     @patch('aws.service.av.open')
@@ -151,6 +162,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
+
+    # todo: (8) Тест загрузки base64-файла - видео слишком большое по весу
     @patch('aws.service.s3_upload')
     @patch('aws.service.compress_video')
     @patch('aws.service.av.open')
@@ -174,6 +187,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail,
                          f'Video file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.')
 
+
+    # todo: (9) Тест загрузки base64-файла - аудио
     @patch('aws.service.s3_upload', new_callable=AsyncMock)
     @patch('aws.service.base64.b64decode', new_callable=MagicMock)
     async def test_upload_from_base64_audio(self, mock_decode, mock_s3_upload):
@@ -185,6 +200,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
+
+    # todo: (10) Тест загрузки base64-файла - аудио слишком большое по весу
     @patch('aws.service.s3_upload', new_callable=AsyncMock)
     @patch('aws.service.base64.b64decode', new_callable=MagicMock)
     async def test_upload_from_base64_audio_size_too_big(self, mock_decode, mock_s3_upload):
@@ -199,6 +216,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail,
                          f'Audio file size exceeds the maximum allowed one of {max_size / MB} MB. Try another one.')
 
+
+    # todo: (11) Тест загрузки base64-файла - нет base64-данных
     async def test_upload_from_base64_no_base64_data(self):
         base64_data = ''
         with self.assertRaises(HTTPException) as context:
@@ -207,6 +226,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(context.exception.detail, 'Base64 data not found!')
 
+
+    # todo: (12) Тест загрузки изображения - вес слишком большой
     async def test_upload_image_size_too_big(self):
         current_bytes = os.urandom(10 * MB + 1)
         mock_file = MagicMock()
@@ -227,6 +248,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail,
                          'Image file size should not exceed 10 MB. ')
 
+
+    # todo: (13) Тест загрузки изображения - размер слишком мал
     async def test_upload_image_size_too_small(self):
         mock_file = MagicMock()
         mock_file.read = AsyncMock(return_value=b"file content")
@@ -246,6 +269,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail,
                          'Image size is too small to be previewed. More than 10x10 is required.')
 
+
+    # todo: (14) Тест загрузки изображения - сжатие по размеру
     async def test_upload_image_size_and_compression(self):
         mock_file = Mock()
         mock_file.read = AsyncMock(return_value=b"file content")
@@ -268,6 +293,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
+
+    # todo: (15) Тест загрузки файла - нет файла
     async def test_upload_with_no_file(self):
         with self.assertRaises(HTTPException) as context:
             await upload()
@@ -293,6 +320,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         assert result.file_name == mock_s3_upload.call_args[1]['key']
 
+
+    # todo: (16) Тест загрузки файла - неподдерживаемый формат
     async def test_upload_unsupported_file_type(self):
         file_type = 'unsupported/filetype'
         mock_file = Mock()
@@ -310,6 +339,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
         mock_magic.assert_called_once_with(buffer=b"file content", mime=True)
 
+
+    # todo: (17) Тест геттера ссылки на файл
     async def test_get_url(self):
         with patch('aws.service.s3_URL') as mock_s3_URL:
             mock_s3_URL.return_value = 'http://example.com/image.jpg'
@@ -320,6 +351,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(result, 'http://example.com/image.jpg')
 
+
+    # todo: (18) Тест геттера ссылки на файл - нет имени файла
     async def test_get_url_with_no_file_name(self):
         with self.assertRaises(HTTPException) as context:
             await get_url()
@@ -327,6 +360,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(context.exception.detail, 'No file name provided.')
 
+
+    # todo: (19) Тест скачивания файла
     async def test_download(self):
         with patch('aws.service.s3_download') as mock_s3_download:
             mock_s3_download.return_value = b'fake file data'
@@ -337,6 +372,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(result.headers['Content-Type'], 'application/octet-stream')
 
+
+    # todo: (20) Тест скачивания файла - нет имени файла
     async def test_download_with_no_file_name(self):
         with self.assertRaises(HTTPException) as context:
             await download()
