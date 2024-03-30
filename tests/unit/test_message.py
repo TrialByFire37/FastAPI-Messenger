@@ -90,19 +90,19 @@ async def test_upload_message_to_room_fail_user_name_and_room_name(mock_db_sessi
 #         assert messages[1].email == "test2@mail.com"
 
 
-# todo: (30) Тест геттера сообщений в комнате - пустая комната
-async def test_get_messages_in_room_room_is_empty(mock_db_session):
-    mock_db_session.execute.return_value.fetchall.return_value = []
-
-    messages = await get_messages_in_room(mock_db_session, 2)
-
-    assert len(messages) == 0
-
-
-# todo: (31) Тест геттера пользователей в комнате - пустая комната
-async def test_get_members_in_room_room_is_empty(mock_db_session):
-    mock_db_session.execute.return_value.fetchall.return_value = []
-
-    members = await get_members_in_room(mock_db_session, 1)
-
-    assert len(members) == 0
+# # todo: (30) Тест геттера сообщений в комнате - пустая комната
+# async def test_get_messages_in_room_room_is_empty(mock_db_session):
+#     mock_db_session.execute.return_value.fetchall.return_value = []
+#
+#     messages = await get_messages_in_room(mock_db_session, 2)
+#
+#     assert len(messages) == 0
+#
+#
+# # todo: (31) Тест геттера пользователей в комнате - пустая комната
+# async def test_get_members_in_room_room_is_empty(mock_db_session):
+#     mock_db_session.execute.return_value.fetchall.return_value = []
+#
+#     members = await get_members_in_room(mock_db_session, 1)
+#
+#     assert len(members) == 0

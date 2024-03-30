@@ -34,6 +34,10 @@ async def test_user_login(username, password, ac: AsyncClient):
     }
     response = await ac.post("/api/auth/jwt/login", data=user_data)
     assert response.status_code == 200
+    assert "access_token" in response.json()
+    assert "token_type" in response.json()
+    assert response.json()['access_token'] is not None
+    assert response.json()['token_type'] is not None
 
 
 # todo: (2) Тест неудачного входа с неправильным паролем
@@ -145,6 +149,7 @@ async def test_user_me(username, password, ac: AsyncClient):
     }
     response = await ac.get("/api/user/me", headers=headers)
     assert response.status_code == 200
+    assert response.json() is not None
 
 
 # todo: (9) Тест неудачного получения информации о пользователе
@@ -178,17 +183,24 @@ async def test_user_update(username, password, ac: AsyncClient):
         "Authorization": "Bearer " + token
     }
 
+    response = await ac.get("/api/user/me", headers=headers)
+    assert response.status_code == 200
+
+    user_me = response.json()
+
     user_patch_data = {
         "email": "user@mail.ru",
         "is_active": True,
         "is_superuser": True,
-        "is_verified": True,
+        "is_verified": False,
         "last_name": "string",
         "first_name": "string",
         "surname": "string"
     }
     response = await ac.patch("/api/user/me", headers=headers, json=user_patch_data)
     assert response.status_code == 200
+    patched_user_me = response.json()
+    assert patched_user_me is not user_me
 
 
 # todo: (11) Тест неудачного изменения данных пользователя

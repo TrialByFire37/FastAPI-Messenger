@@ -28,7 +28,7 @@ async def upload_message_to_room(session: AsyncSession, room_name: str, user_nam
 async def upload_message_with_file_to_room(session: AsyncSession,
                                            room_name: str,
                                            user_name: str,
-                                           data_message:str,
+                                           data_message: str,
                                            base64_data: str,
                                            file_type: str) -> str:
     try:
@@ -40,7 +40,8 @@ async def upload_message_with_file_to_room(session: AsyncSession,
         else:
             media_file_url = media_file_url.file_name
         await session.execute(
-            insert(message).values(user=user_id, room=room_id, message_data=data_message, media_file_url=media_file_url, ))
+            insert(message).values(user=user_id, room=room_id, message_data=data_message,
+                                   media_file_url=media_file_url, ))
         await session.commit()
         return media_file_url
     except Exception as e:
@@ -54,7 +55,7 @@ async def get_messages_in_room(session: AsyncSession, room_id: int) -> List[Mess
         .join(room, room.c.room_id == message.c.room)
         .where(room.c.room_id == room_id)
     )
-    rows = await result.fetchall()
+    rows = result.fetchall()
     messages: List[MessageRead] = list()
     for row in rows:
         user_read_request = await get_user_by_id(session, row[4])
@@ -73,7 +74,7 @@ async def get_members_in_room(session: AsyncSession, room_id: int) -> List[Membe
         .join(user, user.c.id == room_user.c.user)
         .where(room.c.room_id == room_id)
     )
-    rows = await result.fetchall()
+    rows = result.fetchall()
     members: List[MemberRead] = list()
     for row in rows:
         if len(row) >= 11:

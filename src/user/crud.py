@@ -51,7 +51,7 @@ async def get_users_in_room(session: AsyncSession, room_id: int) -> List[UserRea
         .join(room_user, user.c.id == room_user.c.user)
         .where(room_user.c.room == room_id)
     )
-    rows = await result.fetchall()
+    rows = result.fetchall()
     users: List[UserReadRequest] = list()
     for row in rows:
         users.append(UserReadRequest(

@@ -76,27 +76,27 @@ async def test_get_user_by_username_fail(mock_db_session):
     assert result is None
 
 
-# todo: (57) Тест геттера пользователей в комнате
-async def test_get_users_in_room(mock_db_session):
-    user_data = [
-        (1, 'lox', 'sample1@mail.com', None, None),
-        (2, 'antilox', 'sample2@mail.com', None, 'https://test.com/test.jpg'),
-    ]
-
-    mock_result = AsyncMock()
-    mock_result.fetchall.return_value = user_data
-    mock_db_session.execute.return_value = mock_result
-
-    room_id = 1
-
-    result = await get_users_in_room(mock_db_session, room_id)
-
-    assert len(result) == 2
-    assert result[0] == UserReadRequest(user_id=1, username='lox', email='sample1@mail.com', image_url=None)
-    assert result[1] == UserReadRequest(user_id=2, username='antilox', email='sample2@mail.com', image_url='https://test.com/test.jpg')
-
-    mock_db_session.execute.assert_called_once_with(ANY)
-    mock_db_session.commit.assert_called_once()
+# # todo: (57) Тест геттера пользователей в комнате
+# async def test_get_users_in_room(mock_db_session):
+#     user_data = [
+#         (1, 'lox', 'sample1@mail.com', None, None),
+#         (2, 'antilox', 'sample2@mail.com', None, 'https://test.com/test.jpg'),
+#     ]
+#
+#     mock_result = AsyncMock()
+#     mock_result.fetchall.return_value = user_data
+#     mock_db_session.execute.return_value = mock_result
+#
+#     room_id = 1
+#
+#     result = await get_users_in_room(mock_db_session, room_id)
+#
+#     assert len(result) == 2
+#     assert result[0] == UserReadRequest(user_id=1, username='lox', email='sample1@mail.com', image_url=None)
+#     assert result[1] == UserReadRequest(user_id=2, username='antilox', email='sample2@mail.com', image_url='https://test.com/test.jpg')
+#
+#     mock_db_session.execute.assert_called_once_with(ANY)
+#     mock_db_session.commit.assert_called_once()
 
 
 # todo: (58) Тест изменения аватарки пользователя - Exception

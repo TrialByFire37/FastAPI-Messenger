@@ -1,6 +1,4 @@
 #!/bin/bash
-alembic upgrade head
-python3 main.py
-
- coverage run -m pytest -vv
- coverage html
+/usr/local/bin/python3.11 -m  coverage run -m pytest -vv
+/usr/local/bin/python3.11 -m coverage html
+/usr/local/bin/python3.11 src/main.py

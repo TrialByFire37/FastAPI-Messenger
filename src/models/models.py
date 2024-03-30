@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Index, ForeignKeyConstraint, Boolean, \
     UniqueConstraint
 
-from src.database import metadata
+from database import metadata
 
 room = Table(
     "room",
