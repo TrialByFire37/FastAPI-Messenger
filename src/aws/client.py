@@ -2,6 +2,7 @@ import boto3
 
 from aws.config import ENDPOINT, KEY_ID_RO, APPLICATION_KEY_RO
 
+
 client = boto3.client(
     service_name='s3',
     endpoint_url=ENDPOINT,

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Index, ForeignKeyConstraint, Boolean, \
+from sqlalchemy import Table, Column, Integer, String, DateTime, Index, ForeignKeyConstraint, Boolean, \
     UniqueConstraint
 
 from database import metadata

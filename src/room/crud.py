@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import select, insert, delete, and_, update
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound, IntegrityError
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from message.crud import get_messages_in_room

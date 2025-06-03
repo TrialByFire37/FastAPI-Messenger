@@ -1,19 +1,14 @@
 import base64
-import time
 from io import BytesIO
+import time
 from typing import Optional
 from uuid import uuid4
 
 import av
+import certifi
+from fastapi import HTTPException, Response, UploadFile, status
 import magic
 from PIL import Image
-from fastapi import HTTPException, Response, UploadFile, status
-
-from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE, SUPPORTED_FILE_TYPES_FORM_AUDIO, \
-    SUPPORTED_FILE_TYPES_FORM_VIDEO, SUPPORTED_FILE_TYPES_FORM_APPLICATION
-from aws.schemas import FileRead
-from aws.utils import s3_download, s3_upload, s3_URL
-
 import shotstack_sdk
 from shotstack_sdk.api import edit_api
 from shotstack_sdk.model.clip import Clip
@@ -22,7 +17,12 @@ from shotstack_sdk.model.output import Output
 from shotstack_sdk.model.timeline import Timeline
 from shotstack_sdk.model.track import Track
 from shotstack_sdk.model.video_asset import VideoAsset
-import certifi
+
+from aws.config import SHOTSTACK_API
+from aws.constants import MB, SUPPORTED_FILE_TYPES_FORM_IMAGE, SUPPORTED_FILE_TYPES_FORM_AUDIO, \
+    SUPPORTED_FILE_TYPES_FORM_VIDEO, SUPPORTED_FILE_TYPES_FORM_APPLICATION
+from aws.schemas import FileRead
+from aws.utils import s3_download, s3_upload, s3_URL
 
 
 async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -> FileRead:
@@ -35,7 +35,7 @@ async def compress_video(video_data: bytes, file_type: str, resize_flag: bool) -
     configuration = shotstack_sdk.Configuration(host='https://api.shotstack.io/stage')
     configuration.ssl_ca_cert = certifi.where()
     configuration.verify_ssl = False
-    configuration.api_key['DeveloperKey'] = 'Ih6eOAplvIx9B0eZ2KkfKkDY1i3RVO7AbtLVhPeG'
+    configuration.api_key['DeveloperKey'] = SHOTSTACK_API
 
     with shotstack_sdk.ApiClient(configuration) as api_client:
         api_instance = edit_api.EditApi(api_client)

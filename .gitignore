@@ -1,0 +1,10 @@
+.idea/
+.vscode/
+.env
+*.pem
+.pytest-cache/
+venv/
+__pycache__/
+resources/
+!resources.md
+test_message.txt
