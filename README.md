@@ -39,7 +39,7 @@ A project made for SPbSPU's discipline "Technologies of quality software develop
  ENDPOINT=<AWS bucket endpoint>
  KEY_ID_RO=<AWS bucket key>
  APPLICATION_KEY_RO=<AWS bucket private key>
- YANDEX_BUCKET=<AWS bucket name>
+ AWS_BUCKET=<AWS bucket name>
  
  SHOTSTACK_API=<Shotstack API key>
  
@@ -50,7 +50,7 @@ A project made for SPbSPU's discipline "Technologies of quality software develop
  DB_NAME_TEST=<the name of your DB for test data>
  ```
  * Migrate the existing version of DB from "migrations/versions":
-`py alembic upgrade <sequence of letters and numbers from the filename>`
+`py alembic upgrade <first sequence of random letters and numbers from the filename>`
  * Run the server using "src/main.py".
 
 5. Frontend:

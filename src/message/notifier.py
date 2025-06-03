@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from room.crud import set_room_activity
 
+
 logger = logging.getLogger(__name__)
 
 

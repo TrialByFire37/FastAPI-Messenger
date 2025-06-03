@@ -2,15 +2,14 @@ import logging
 from typing import List, Optional
 
 from fastapi import UploadFile
-from fastapi_users.password import PasswordHelper
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.schemas import UserRead
 from aws.service import upload, get_url
 from models.models import user, room_user
-from user.schemas import UserReadRequest, UserBaseReadRequest, UserUpdateRequest
+from user.schemas import UserReadRequest, UserBaseReadRequest
 
 logger = logging.getLogger(__name__)
 

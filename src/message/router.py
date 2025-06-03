@@ -10,6 +10,7 @@ from message.crud import upload_message_to_room, upload_message_with_file_to_roo
 from message.notifier import ConnectionManager
 from room.crud import set_user_room_activity, get_room, add_user_to_room
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
